@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Question;
 use App\Models\QuestionChoice;
 use App\Models\Answer;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -48,5 +49,13 @@ class DatabaseSeeder extends Seeder
                 });
             });
         });
+
+        // Create an admin user
+        User::create([
+            'name' => 'Admin',
+            'email' => 'admin@example.com',
+            'password' => Hash::make('12345678'),
+            'role' => 'admin',
+        ]);
     }
 }

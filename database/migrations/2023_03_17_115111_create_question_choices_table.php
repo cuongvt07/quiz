@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('question_id')->constrained();
             $table->boolean('is_correct')->default(false);
             $table->text('name');
+            $table->text('explanation')->nullable(); // Thêm trường explanation
             $table->timestamps();
         });
     }

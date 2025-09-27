@@ -16,11 +16,11 @@ class Category extends Model
     ];
 
     /**
-     * Get all of the question for the Category
+     * Get all of the questions for the Category
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function question(): HasMany
+    public function questions(): HasMany
     {
         return $this->hasMany(Question::class, 'category_id', 'id');
     }

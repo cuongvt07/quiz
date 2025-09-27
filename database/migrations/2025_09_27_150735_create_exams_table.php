@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('categories', function (Blueprint $table) {
+        Schema::create('exams', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 255);
-            $table->string('slug', 255);
-            $table->text('description')->nullable(); // Thêm trường description
+            $table->foreignId('subject_id')->constrained()->onDelete('cascade');
+            $table->string('title');
+            $table->integer('duration_minutes')->default(60);
+            $table->integer('total_questions')->default(50);
             $table->timestamps();
         });
     }
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        Schema::dropIfExists('exams');
     }
 };
