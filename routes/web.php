@@ -38,6 +38,9 @@ Route::middleware([
 
 // Admin routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Bài thi chia 2 module theo type môn học
+    Route::get('exams/nangluc', [\App\Http\Controllers\ExamController::class, 'indexNangLuc'])->name('exams.nangluc');
+    Route::get('exams/tuduy', [\App\Http\Controllers\ExamController::class, 'indexTuDuy'])->name('exams.tuduy');
     Route::get('/categories', [AdminController::class, 'indexCategories'])->name('categories.index');
     Route::get('/subjects', [\App\Http\Controllers\SubjectController::class, 'index'])->name('subjects.index');
     Route::get('/subjects/create', [\App\Http\Controllers\SubjectController::class, 'create'])->name('subjects.create');
@@ -45,11 +48,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/subjects/{subject}/edit', [\App\Http\Controllers\SubjectController::class, 'edit'])->name('subjects.edit');
     Route::put('/subjects/{subject}', [\App\Http\Controllers\SubjectController::class, 'update'])->name('subjects.update');
     Route::delete('/subjects/{subject}', [\App\Http\Controllers\SubjectController::class, 'destroy'])->name('subjects.destroy');
-    Route::get('/exams', [AdminController::class, 'indexExams'])->name('exams.index');
+    Route::resource('exams', \App\Http\Controllers\ExamController::class)->names('exams');
     Route::get('/import', [ImportController::class, 'showImportForm'])->name('import.form');
     Route::post('/import', [ImportController::class, 'import'])->name('import');
-    Route::get('/exams/create', [AdminController::class, 'createExam'])->name('exams.create');
-    Route::post('/exams', [AdminController::class, 'storeExam'])->name('exams.store');
     
     // Admin dashboard route
     Route::get('/dashboard', function () {

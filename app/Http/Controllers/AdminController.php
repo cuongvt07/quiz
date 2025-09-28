@@ -27,35 +27,6 @@ class AdminController extends Controller
         return view('admin.subjects.index', compact('subjects'));
     }
 
-    // Hiển thị danh sách bài thi
-    public function indexExams()
-    {
-        $exams = Exam::all();
-        return view('admin.exams.index', compact('exams'));
-    }
-
-    // Hiển thị form tạo đề thi
-    public function createExam()
-    {
-        $subjects = Subject::all();
-        return view('admin.exams.create', compact('subjects'));
-    }
-
-    // Lưu đề thi mới
-    public function storeExam(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'subject_id' => 'required|exists:subjects,id',
-            'duration_minutes' => 'required|integer|min:1',
-            'total_questions' => 'required|integer|min:1',
-        ]);
-
-        Exam::create($request->all());
-
-        return redirect()->route('admin.exams.index')->with('success', 'Đề thi đã được tạo thành công!');
-    }
-
     // Danh mục câu hỏi CRUD
     public function createCategory()
     {
