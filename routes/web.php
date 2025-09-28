@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -38,7 +39,12 @@ Route::middleware([
 // Admin routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/categories', [AdminController::class, 'indexCategories'])->name('categories.index');
-    Route::get('/subjects', [AdminController::class, 'indexSubjects'])->name('subjects.index');
+    Route::get('/subjects', [\App\Http\Controllers\SubjectController::class, 'index'])->name('subjects.index');
+    Route::get('/subjects/create', [\App\Http\Controllers\SubjectController::class, 'create'])->name('subjects.create');
+    Route::post('/subjects', [\App\Http\Controllers\SubjectController::class, 'store'])->name('subjects.store');
+    Route::get('/subjects/{subject}/edit', [\App\Http\Controllers\SubjectController::class, 'edit'])->name('subjects.edit');
+    Route::put('/subjects/{subject}', [\App\Http\Controllers\SubjectController::class, 'update'])->name('subjects.update');
+    Route::delete('/subjects/{subject}', [\App\Http\Controllers\SubjectController::class, 'destroy'])->name('subjects.destroy');
     Route::get('/exams', [AdminController::class, 'indexExams'])->name('exams.index');
     Route::get('/import', [ImportController::class, 'showImportForm'])->name('import.form');
     Route::post('/import', [ImportController::class, 'import'])->name('import');
@@ -57,6 +63,23 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('categories/{category}/edit', [AdminController::class, 'editCategory'])->name('categories.edit');
     Route::put('categories/{category}', [AdminController::class, 'updateCategory'])->name('categories.update');
     Route::delete('categories/{category}', [AdminController::class, 'destroyCategory'])->name('categories.destroy');
+
+    // Gói nâng cấp thành viên
+    Route::get('subscription-plans', [\App\Http\Controllers\SubscriptionPlanController::class, 'index'])->name('subscription_plans.index');
+    Route::post('subscription-plans', [\App\Http\Controllers\SubscriptionPlanController::class, 'store'])->name('subscription_plans.store');
+    Route::put('subscription-plans/{subscription_plan}', [\App\Http\Controllers\SubscriptionPlanController::class, 'update'])->name('subscription_plans.update');
+    Route::delete('subscription-plans/{subscription_plan}', [\App\Http\Controllers\SubscriptionPlanController::class, 'destroy'])->name('subscription_plans.destroy');
+
+    
+    // Quản lý tài khoản: 2 tab
+    Route::get('accounts/admins', [\App\Http\Controllers\UsersController::class, 'admins'])->name('accounts.admins');
+    Route::get('accounts/users', [\App\Http\Controllers\UsersController::class, 'users'])->name('accounts.users');
+    // Nếu vẫn cần resource users cho AJAX CRUD
+    Route::resource('users', \App\Http\Controllers\UsersController::class)->names('users');
+    Route::post('admins', [\App\Http\Controllers\AdminAccountController::class, 'store'])->name('admins.store');
+    Route::put('admins/{admin}', [\App\Http\Controllers\AdminAccountController::class, 'update'])->name('admins.update');
+    Route::delete('admins/{admin}', [\App\Http\Controllers\AdminAccountController::class, 'destroy'])->name('admins.destroy');
+
 });
 
 // Admin authentication routes
