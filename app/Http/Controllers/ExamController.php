@@ -4,86 +4,317 @@ namespace App\Http\Controllers;
 
 use App\Models\Exam;
 use App\Models\Subject;
+use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Models\Question;
 
 class ExamController extends Controller
 {
+    // Helper chung để ghi log lỗi
+    protected function handleException(\Throwable $e, string $message, array $context = [])
+    {
+        Log::error($message . ': ' . $e->getMessage(), [
+            'trace' => $e->getTraceAsString(),
+            'context' => $context
+        ]);
+        return back()->with('error', $message);
+    }
+
     // Đề thi Năng lực
     public function indexNangLuc(Request $request)
     {
-        $subject_id = $request->get('subject_id');
-        $subjects = Subject::where('type', 'nang_luc')->orderBy('name')->get();
-        $query = Exam::with('subject')->whereHas('subject', function($q){ $q->where('type', 'nang_luc'); });
-        if ($subject_id) {
-            $query->where('subject_id', $subject_id);
+        try {
+            $subject_id = $request->get('subject_id');
+            $subjects = Subject::where('type', 'nang_luc')->orderBy('name')->get();
+
+            $query = Exam::with('subject')->whereHas('subject', function ($q) {
+                $q->where('type', 'nang_luc');
+            });
+
+            if ($subject_id) {
+                $query->where('subject_id', $subject_id);
+            }
+
+            $exams = $query->orderByDesc('id')->paginate(15);
+            return view('admin.exams.index', compact('exams', 'subjects', 'subject_id'));
+        } catch (\Throwable $e) {
+            return $this->handleException($e, 'Lỗi khi tải danh sách đề thi năng lực');
         }
-        $exams = $query->orderByDesc('id')->paginate(15);
-        return view('admin.exams.index', compact('exams', 'subjects', 'subject_id'));
     }
 
     // Đề thi Tư duy
     public function indexTuDuy(Request $request)
     {
-        $subject_id = $request->get('subject_id');
-        $subjects = Subject::where('type', 'tu_duy')->orderBy('name')->get();
-        $query = Exam::with('subject')->whereHas('subject', function($q){ $q->where('type', 'tu_duy'); });
-        if ($subject_id) {
-            $query->where('subject_id', $subject_id);
+        try {
+            $subject_id = $request->get('subject_id');
+            $subjects = Subject::where('type', 'tu_duy')->orderBy('name')->get();
+
+            $query = Exam::with('subject')->whereHas('subject', function ($q) {
+                $q->where('type', 'tu_duy');
+            });
+
+            if ($subject_id) {
+                $query->where('subject_id', $subject_id);
+            }
+
+            $exams = $query->orderByDesc('id')->paginate(15);
+            return view('admin.exams.index', compact('exams', 'subjects', 'subject_id'));
+        } catch (\Throwable $e) {
+            return $this->handleException($e, 'Lỗi khi tải danh sách đề thi tư duy');
         }
-        $exams = $query->orderByDesc('id')->paginate(15);
-        return view('admin.exams.index', compact('exams', 'subjects', 'subject_id'));
     }
+
+    // Tất cả đề thi
     public function index(Request $request)
     {
-        $subject_id = $request->get('subject_id');
-        $subjects = Subject::orderBy('name')->get();
-        $query = Exam::with('subject');
-        if ($subject_id) {
-            $query->where('subject_id', $subject_id);
+        try {
+            $subject_id = $request->get('subject_id');
+            $subjects = Subject::orderBy('name')->get();
+            $query = Exam::with('subject');
+
+            if ($subject_id) {
+                $query->where('subject_id', $subject_id);
+            }
+
+            $exams = $query->orderByDesc('id')->paginate(15);
+            return view('admin.exams.index', compact('exams', 'subjects', 'subject_id'));
+        } catch (\Throwable $e) {
+            return $this->handleException($e, 'Lỗi khi tải danh sách đề thi');
         }
-        $exams = $query->orderByDesc('id')->paginate(15);
-        return view('admin.exams.index', compact('exams', 'subjects', 'subject_id'));
     }
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'subject_id' => 'required|exists:subjects,id',
-            'title' => 'required|string|max:255',
-            'duration_minutes' => 'required|integer|min:1',
-            'total_questions' => 'required|integer|min:1',
-        ]);
-    $exam = Exam::create($data);
-    $type = $exam->subject->type ?? null;
-    $route = $type === 'nang_luc' ? 'admin.exams.nangluc' : ($type === 'tu_duy' ? 'admin.exams.tuduy' : 'admin.exams.index');
-    return redirect()->route($route)->with('success', 'Thêm đề thi thành công!');
+        try {
+            $data = $request->validate([
+                'subject_id' => 'required|exists:subjects,id',
+                'title' => 'required|string|max:255',
+                'duration_minutes' => 'required|integer|min:1',
+                'total_questions' => 'required|integer|min:1',
+            ]);
+
+            $exam = Exam::create($data);
+            $type = $exam->subject->type ?? null;
+
+            $route = $type === 'nang_luc'
+                ? 'admin.exams.nangluc'
+                : ($type === 'tu_duy'
+                    ? 'admin.exams.tuduy'
+                    : 'admin.exams.index');
+
+            return redirect()->route($route)->with('success', 'Thêm đề thi thành công!');
+        } catch (\Throwable $e) {
+            return $this->handleException($e, 'Lỗi khi thêm đề thi', $request->all());
+        }
     }
 
     public function show(Exam $exam)
     {
-    $exam->load(['subject', 'questions.questionChoices']);
-    return view('admin.exams.show', compact('exam'));
+        try {
+            $exam->load(['subject', 'questions.category']);
+            $categories = Category::orderBy('name')->get();
+            return view('admin.exams.show', compact('exam', 'categories'));
+        } catch (\Throwable $e) {
+            return $this->handleException($e, 'Lỗi khi hiển thị chi tiết đề thi', ['exam_id' => $exam->id]);
+        }
+    }
+
+    public function updateDuration(Request $request, Exam $exam)
+    {
+        try {
+            $request->validate([
+                'duration_minutes' => 'required|integer|min:1'
+            ]);
+
+            $exam->update([
+                'duration_minutes' => $request->duration_minutes
+            ]);
+
+            return response()->json(['message' => 'Thời gian đã được cập nhật']);
+        } catch (\Throwable $e) {
+            Log::error('Lỗi khi cập nhật thời gian: ' . $e->getMessage(), ['exam_id' => $exam->id]);
+            return response()->json(['message' => 'Lỗi khi cập nhật thời gian'], 500);
+        }
+    }
+
+    public function toggleQuestionStatus(Request $request, Exam $exam, $questionId)
+    {
+        try {
+            $question = $exam->questions()->findOrFail($questionId);
+            $question->update([
+                'is_active' => !$question->is_active
+            ]);
+
+            return response()->json(['message' => 'Trạng thái câu hỏi đã được cập nhật']);
+        } catch (\Throwable $e) {
+            Log::error('Lỗi khi đổi trạng thái câu hỏi: ' . $e->getMessage(), ['exam_id' => $exam->id, 'question_id' => $questionId]);
+            return response()->json(['message' => 'Lỗi khi đổi trạng thái câu hỏi'], 500);
+        }
+    }
+
+    public function saveQuestion(Request $request, Exam $exam)
+    {
+        try {
+            $request->validate([
+                'question' => 'required|string',
+                'type' => 'required|in:multiple,text',
+                'answers' => 'required|array|min:1',
+                'answers.*.name' => 'required|string',
+                'answers.*.is_correct' => 'required|boolean',
+                'answers.*.explanation' => 'nullable|string'
+            ]);
+
+            $questionData = [
+                'question' => $request->question,
+                'is_active' => true
+            ];
+
+            if ($request->question_id) {
+                $question = $exam->questions()->findOrFail($request->question_id);
+                $question->update($questionData);
+                $question->questionChoices()->delete();
+            } else {
+                $question = $exam->questions()->create($questionData);
+            }
+
+            foreach ($request->answers as $answer) {
+                $question->questionChoices()->create([
+                    'name' => $answer['name'],
+                    'is_correct' => $answer['is_correct'],
+                    'explanation' => $answer['explanation'] ?? null
+                ]);
+            }
+
+            return response()->json([
+                'message' => 'Câu hỏi đã được lưu',
+                'question' => $question->load('questionChoices')
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Lỗi khi lưu câu hỏi: ' . $e->getMessage(), ['exam_id' => $exam->id, 'data' => $request->all()]);
+            return response()->json(['message' => 'Lỗi khi lưu câu hỏi'], 500);
+        }
     }
 
     public function update(Request $request, Exam $exam)
     {
-        $data = $request->validate([
-            'subject_id' => 'required|exists:subjects,id',
-            'title' => 'required|string|max:255',
-            'duration_minutes' => 'required|integer|min:1',
-            'total_questions' => 'required|integer|min:1',
-        ]);
-    $exam->update($data);
-    $type = $exam->subject->type ?? null;
-    $route = $type === 'nang_luc' ? 'admin.exams.nangluc' : ($type === 'tu_duy' ? 'admin.exams.tuduy' : 'admin.exams.index');
-    return redirect()->route($route)->with('success', 'Cập nhật đề thi thành công!');
+        try {
+            $data = $request->validate([
+                'subject_id' => 'required|exists:subjects,id',
+                'title' => 'required|string|max:255',
+                'duration_minutes' => 'required|integer|min:1',
+                'total_questions' => 'required|integer|min:1',
+            ]);
+
+            $exam->update($data);
+            $type = $exam->subject->type ?? null;
+
+            $route = $type === 'nang_luc'
+                ? 'admin.exams.nangluc'
+                : ($type === 'tu_duy'
+                    ? 'admin.exams.tuduy'
+                    : 'admin.exams.index');
+
+            return redirect()->route($route)->with('success', 'Cập nhật đề thi thành công!');
+        } catch (\Throwable $e) {
+            return $this->handleException($e, 'Lỗi khi cập nhật đề thi', ['exam_id' => $exam->id, 'data' => $request->all()]);
+        }
     }
 
     public function destroy(Exam $exam)
     {
-    $type = $exam->subject->type ?? null;
-    $exam->delete();
-    $route = $type === 'nang_luc' ? 'admin.exams.nangluc' : ($type === 'tu_duy' ? 'admin.exams.tuduy' : 'admin.exams.index');
-    return redirect()->route($route)->with('success', 'Xoá đề thi thành công!');
+        try {
+            $type = $exam->subject->type ?? null;
+            $exam->delete();
+
+            $route = $type === 'nang_luc'
+                ? 'admin.exams.nangluc'
+                : ($type === 'tu_duy'
+                    ? 'admin.exams.tuduy'
+                    : 'admin.exams.index');
+
+            return redirect()->route($route)->with('success', 'Xoá đề thi thành công!');
+        } catch (\Throwable $e) {
+            return $this->handleException($e, 'Lỗi khi xoá đề thi', ['exam_id' => $exam->id]);
+        }
+    }
+
+    public function batchUpdateQuestions(Request $request, Exam $exam)
+    {
+        try {
+            $filtered = collect($request->input('questions', []))
+                ->filter(fn($q) => !empty($q['question']))
+                ->values()
+                ->toArray();
+
+            $request->merge(['questions' => $filtered]);
+
+            $request->validate([
+                'duration_minutes' => 'required|integer|min:1',
+                'total_questions' => 'required|integer|min:1',
+                'questions' => 'required|array|min:1',
+                'questions.*.question' => 'required|string|max:1000',
+                'questions.*.category_id' => 'required|exists:categories,id',
+                'questions.*.answers' => 'nullable|array',
+                'questions.*.answers.*.name' => 'required_with:questions.*.answers|string|max:500',
+                'questions.*.answers.*.explanation' => 'nullable|string|max:1000',
+                'questions.*.answers.*.is_correct' => 'boolean',
+            ]);
+
+            $exam->update([
+                'duration_minutes' => $request->duration_minutes,
+                'total_questions' => $request->total_questions
+            ]);
+
+            $questionIds = [];
+            $createdCount = 0;
+
+            foreach ($request->questions as $data) {
+                $question = Question::updateOrCreate(
+                    ['id' => $data['id'] ?? null],
+                    [
+                        'question' => $data['question'],
+                        'category_id' => $data['category_id'],
+                        'is_active' => $data['is_active'] ?? 1, 
+                    ]
+                );
+
+                if (!$data['id']) {
+                    $createdCount++; 
+                }
+
+                $questionIds[] = $question->id;
+
+                if (isset($data['answers']) && is_array($data['answers']) && !empty($data['answers'])) {
+                    $question->questionChoices()->delete();
+
+                    foreach ($data['answers'] as $answerData) {
+                        if (!empty($answerData['name'])) {
+                            $question->questionChoices()->create([
+                                'name' => $answerData['name'],
+                                'explanation' => $answerData['explanation'] ?? '',
+                                'is_correct' => $answerData['is_correct'] ?? false,
+                            ]);
+                        }
+                    }
+                } else {
+                    $question->questionChoices()->delete();
+                }
+            }
+
+            $exam->questions()->sync($questionIds);
+
+            return response()->json([
+                'message' => 'Đã lưu thay đổi thành công!',
+                'created_count' => $createdCount,
+                'redirect' => route('admin.exams.show', $exam)
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Lỗi khi batch update câu hỏi: ' . $e->getMessage(), [
+                'exam_id' => $exam->id,
+                'input' => $request->all(),
+            ]);
+            return response()->json(['message' => 'Lỗi khi lưu thay đổi: ' . $e->getMessage()], 500);
+        }
     }
 }

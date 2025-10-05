@@ -32,8 +32,7 @@ class Exam extends Model
     /**
      * Get the questions for the exam.
      */
-    public function questions(): HasMany
-    {
-        return $this->hasMany(ExamQuestion::class);
+    public function questions() {
+        return $this->belongsToMany(Question::class, 'exam_questions');
     }
 }

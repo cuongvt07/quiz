@@ -25,4 +25,14 @@ class Question extends Model
     {
         return $this->hasMany(QuestionChoice::class);
     }
+
+    /**
+     * Get the category that owns the Question
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }

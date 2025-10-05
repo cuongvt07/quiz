@@ -41,6 +41,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Bài thi chia 2 module theo type môn học
     Route::get('exams/nangluc', [\App\Http\Controllers\ExamController::class, 'indexNangLuc'])->name('exams.nangluc');
     Route::get('exams/tuduy', [\App\Http\Controllers\ExamController::class, 'indexTuDuy'])->name('exams.tuduy');
+    Route::post('exams/{exam}/questions/batch-update', [\App\Http\Controllers\ExamController::class, 'batchUpdateQuestions'])->name('exams.questions.batch-update');
+    Route::post('exams/{exam}/questions/{question}/toggle-status', [\App\Http\Controllers\ExamController::class, 'toggleQuestionStatus'])->name('exams.questions.toggle-status');
     Route::get('/categories', [AdminController::class, 'indexCategories'])->name('categories.index');
     Route::get('/subjects', [\App\Http\Controllers\SubjectController::class, 'index'])->name('subjects.index');
     Route::get('/subjects/create', [\App\Http\Controllers\SubjectController::class, 'create'])->name('subjects.create');
@@ -49,6 +51,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/subjects/{subject}', [\App\Http\Controllers\SubjectController::class, 'update'])->name('subjects.update');
     Route::delete('/subjects/{subject}', [\App\Http\Controllers\SubjectController::class, 'destroy'])->name('subjects.destroy');
     Route::resource('exams', \App\Http\Controllers\ExamController::class)->names('exams');
+    
+    // Exam question management routes
+    Route::post('exams/{exam}/questions', [\App\Http\Controllers\ExamQuestionController::class, 'store'])->name('admin.exam.questions.store');
+    Route::put('exams/{exam}/questions/{question}', [\App\Http\Controllers\ExamQuestionController::class, 'update'])->name('admin.exam.questions.update');
+    Route::delete('exams/{exam}/questions/{question}', [\App\Http\Controllers\ExamQuestionController::class, 'destroy'])->name('admin.exam.questions.destroy');
     Route::get('/import', [ImportController::class, 'showImportForm'])->name('import.form');
     Route::post('/import', [ImportController::class, 'import'])->name('import');
     
