@@ -43,6 +43,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('exams/tuduy', [\App\Http\Controllers\ExamController::class, 'indexTuDuy'])->name('exams.tuduy');
     Route::post('exams/{exam}/questions/batch-update', [\App\Http\Controllers\ExamController::class, 'batchUpdateQuestions'])->name('exams.questions.batch-update');
     Route::post('exams/{exam}/questions/{question}/toggle-status', [\App\Http\Controllers\ExamController::class, 'toggleQuestionStatus'])->name('exams.questions.toggle-status');
+    Route::post('exams/{exam}/questions/import', [\App\Http\Controllers\ExamController::class, 'importQuestions'])->name('exams.questions.import');
+    Route::get('exams/questions/template', [\App\Http\Controllers\ExamController::class, 'downloadTemplate'])->name('exams.questions.template');
     Route::get('/categories', [AdminController::class, 'indexCategories'])->name('categories.index');
     Route::get('/subjects', [\App\Http\Controllers\SubjectController::class, 'index'])->name('subjects.index');
     Route::get('/subjects/create', [\App\Http\Controllers\SubjectController::class, 'create'])->name('subjects.create');

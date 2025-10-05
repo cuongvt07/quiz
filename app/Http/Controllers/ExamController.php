@@ -8,6 +8,9 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Models\Question;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\QuestionsImport;
+use App\Services\QuestionImportService;
 
 class ExamController extends Controller
 {
@@ -315,6 +318,57 @@ class ExamController extends Controller
                 'input' => $request->all(),
             ]);
             return response()->json(['message' => 'Lỗi khi lưu thay đổi: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function downloadTemplate()
+    {
+        try {
+            return Excel::download(new \App\Exports\ExamQuestionsExport(null, true), 'template_cau_hoi.xlsx');
+        } catch (\Throwable $e) {
+            return $this->handleException($e, 'Lỗi khi tải file mẫu');
+        }
+    }
+
+    public function importQuestions(Request $request, Exam $exam)
+    {
+        try {
+            $request->validate([
+                'file' => 'required|file|mimes:xlsx,xls',
+                'import_type' => 'required|in:append,replace'
+            ]);
+
+            $importService = new QuestionImportService(
+                $exam,
+                $request->file('file'),
+                $request->import_type
+            );
+
+            // Validate số lượng trước khi import
+            $importService->validateImport();
+
+            // Thực hiện import
+            $result = $importService->import();
+            
+            // Tạo thông báo chi tiết
+            $stats = $result['stats'];
+            $message = "Đã import thành công {$result['importedCount']} câu hỏi. ";
+            
+            if ($request->import_type === 'append') {
+                $message .= "(Hiện có {$stats['currentCount']}/{$stats['maxCount']} câu, ";
+                $message .= "còn trống {$stats['remainingSlots']} chỗ)";
+            }
+
+            return response()->json([
+                'message' => $message,
+                'redirect' => route('admin.exams.show', $exam)
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Lỗi khi import câu hỏi: ' . $e->getMessage(), [
+                'exam_id' => $exam->id,
+                'file' => $request->file('file')?->getClientOriginalName()
+            ]);
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 }

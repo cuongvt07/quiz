@@ -13,6 +13,9 @@
             </h1>
         </div>
         <div class="flex gap-2">
+            <a href="{{ route('admin.exams.questions.template') }}" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 flex items-center">
+                <i data-feather="download" class="mr-2"></i> Tải file mẫu
+            </a>
             <button type="button" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center" id="btnImportQuestions">
                 <i data-feather="upload" class="mr-2"></i> Import câu hỏi
             </button>
@@ -167,6 +170,43 @@
         </div>
     </div>
 </form>
+
+{{-- Modal for importing questions --}}
+<div id="importModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg w-full max-w-lg mx-4">
+        <div class="p-4 border-b flex justify-between items-center">
+            <h3 class="text-lg font-semibold">Import câu hỏi</h3>
+            <button type="button" onclick="closeImportModal()" class="text-gray-500 hover:text-gray-700">
+                <i data-feather="x"></i>
+            </button>
+        </div>
+        
+        <form id="importForm" method="POST" enctype="multipart/form-data" class="p-6">
+            @csrf
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">File Excel</label>
+                <input type="file" name="file" accept=".xlsx,.xls" class="w-full px-3 py-2 border rounded" required>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Chế độ import</label>
+                <select name="import_type" class="w-full px-3 py-2 border rounded" required>
+                    <option value="append">Thêm mới (Giữ dữ liệu cũ)</option>
+                    <option value="replace">Thay thế (Xóa dữ liệu cũ)</option>
+                </select>
+            </div>
+        </form>
+
+        <div class="p-4 border-t flex justify-end gap-2">
+            <button type="button" onclick="closeImportModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                Hủy
+            </button>
+            <button type="button" onclick="submitImport()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                Import
+            </button>
+        </div>
+    </div>
+</div>
 
 {{-- Modal for managing answers --}}
 <div id="answerModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
@@ -757,6 +797,59 @@ document.getElementById('questionsForm')?.addEventListener('submit', async funct
         if (window.feather) feather.replace();
     }
 });
+
+// Import modal functions
+function openImportModal() {
+    document.getElementById('importModal').classList.remove('hidden');
+}
+
+function closeImportModal() {
+    document.getElementById('importModal').classList.add('hidden');
+    document.getElementById('importForm').reset();
+}
+
+async function submitImport() {
+    const form = document.getElementById('importForm');
+    const formData = new FormData(form);
+    const submitBtn = document.querySelector('#importModal button[onclick="submitImport()"]');
+    const originalText = submitBtn.innerHTML;
+    
+    try {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i data-feather="loader" class="animate-spin mr-2"></i> Đang import...';
+        if (window.feather) feather.replace();
+
+        const response = await fetch('{{ route("admin.exams.questions.import", $exam) }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Có lỗi xảy ra khi import');
+        }
+
+        showNotification(data.message, 'success');
+        closeImportModal();
+        
+        if (data.redirect) {
+            window.location.href = data.redirect;
+        }
+    } catch (error) {
+        showNotification(error.message, 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        if (window.feather) feather.replace();
+    }
+}
+
+// Bind import button click event
+document.getElementById('btnImportQuestions')?.addEventListener('click', openImportModal);
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
