@@ -34,10 +34,35 @@ Route::middleware([
     Route::get('/quizzes', App\Http\Livewire\Quiz\QuizList::class)->name('quizzes');
     Route::get('/quiz/{category:slug}', App\Http\Livewire\Quiz\QuizShow::class)->name('quiz.show');
     Route::get('/quiz/{category:slug}/result', App\Http\Livewire\Quiz\QuizResult::class)->name('quiz.result');
+    
+    // User Exam routes
+    Route::prefix('exams')->name('user.exams.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\User\UserExamController::class, 'index'])->name('index');
+        Route::get('/history', [\App\Http\Controllers\User\UserExamController::class, 'history'])->name('history');
+        Route::get('/{exam}', [\App\Http\Controllers\User\UserExamController::class, 'show'])->name('show');
+        Route::post('/{exam}/start', [\App\Http\Controllers\User\UserExamController::class, 'start'])->name('start');
+        Route::get('/{attempt}/take', [\App\Http\Controllers\User\UserExamController::class, 'take'])->name('take');
+        Route::post('/{attempt}/save-answer', [\App\Http\Controllers\User\UserExamController::class, 'saveAnswer'])->name('save-answer');
+        Route::post('/{attempt}/submit', [\App\Http\Controllers\User\UserExamController::class, 'submit'])->name('submit');
+        Route::get('/{attempt}/result', [\App\Http\Controllers\User\UserExamController::class, 'result'])->name('result');
+    });
 });
 
 // Admin routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Subscription routes
+    Route::post('subscriptions/{subscription}/renew', [\App\Http\Controllers\Admin\SubscriptionRenewalController::class, 'renew'])
+        ->name('subscriptions.renew');
+
+    // Exam Attempts Management routes
+    Route::prefix('exam-attempts')->name('exam-attempts.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ExamAttemptController::class, 'index'])->name('index');
+        Route::get('/exam/{exam}/users', [\App\Http\Controllers\Admin\ExamAttemptController::class, 'examUsers'])->name('exam-users');
+        Route::get('/exam/{exam}/user/{user}', [\App\Http\Controllers\Admin\ExamAttemptController::class, 'userAttempts'])->name('user-attempts');
+        Route::get('/attempt/{attempt}', [\App\Http\Controllers\Admin\ExamAttemptController::class, 'attemptDetail'])->name('attempt-detail');
+        Route::delete('/attempt/{attempt}', [\App\Http\Controllers\Admin\ExamAttemptController::class, 'destroy'])->name('destroy');
+    });
+
     // Bài thi chia 2 module theo type môn học
     Route::get('exams/nangluc', [\App\Http\Controllers\ExamController::class, 'indexNangLuc'])->name('exams.nangluc');
     Route::get('exams/tuduy', [\App\Http\Controllers\ExamController::class, 'indexTuDuy'])->name('exams.tuduy');
@@ -79,6 +104,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('subscription-plans', [\App\Http\Controllers\SubscriptionPlanController::class, 'store'])->name('subscription_plans.store');
     Route::put('subscription-plans/{subscription_plan}', [\App\Http\Controllers\SubscriptionPlanController::class, 'update'])->name('subscription_plans.update');
     Route::delete('subscription-plans/{subscription_plan}', [\App\Http\Controllers\SubscriptionPlanController::class, 'destroy'])->name('subscription_plans.destroy');
+
+    // Quản lý Thành viên đăng ký gói
+    Route::get('subscriptions', [\App\Http\Controllers\Admin\UserSubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::get('subscriptions/create', [\App\Http\Controllers\Admin\UserSubscriptionController::class, 'create'])->name('subscriptions.create');
+    Route::post('subscriptions', [\App\Http\Controllers\Admin\UserSubscriptionController::class, 'store'])->name('subscriptions.store');
+    Route::get('subscriptions/{subscription}', [\App\Http\Controllers\Admin\UserSubscriptionController::class, 'show'])->name('subscriptions.show');
+    Route::delete('subscriptions/{subscription}', [\App\Http\Controllers\Admin\UserSubscriptionController::class, 'destroy'])->name('subscriptions.destroy');
 
     
     // Quản lý tài khoản: 2 tab

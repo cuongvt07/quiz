@@ -24,6 +24,7 @@ class SubscriptionPlanController extends Controller
             'price' => 'required|numeric|min:0',
             'duration_days' => 'required|integer|min:1',
             'description' => 'nullable|string|max:255',
+            'attempts' => 'required|integer|min:0',
         ]);
         SubscriptionPlan::create($data);
         return redirect()->route('admin.subscription_plans.index')->with('success', 'Tạo gói thành công!');
@@ -36,6 +37,7 @@ class SubscriptionPlanController extends Controller
             'price' => 'required|numeric|min:0',
             'duration_days' => 'required|integer|min:1',
             'description' => 'nullable|string|max:255',
+            'attempts' => 'required|integer|min:0',
         ]);
         $subscription_plan->update($data);
         return redirect()->route('admin.subscription_plans.index')->with('success', 'Cập nhật gói thành công!');

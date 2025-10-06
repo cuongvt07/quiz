@@ -10,7 +10,7 @@ class SubscriptionPlan extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'price', 'duration_days', 'description'];
+    protected $fillable = ['name', 'price', 'duration_days', 'description', 'attempts'];
 
     /**
      * Get the user subscriptions for the plan.

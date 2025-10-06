@@ -28,7 +28,7 @@
                 @error('description')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
             </td>
             <td class="px-3 py-2 text-center text-gray-400">-</td>
-            <td class="px-3 py-2 flex gap-2 justify-end">
+            <td class="px-3 py-2 flex gap-2 justify-center">
                 <button type="submit" class="p-2 rounded bg-blue-600 text-white hover:bg-blue-700" title="Thêm mới">
                     <i data-feather="plus" style="width:20px;height:20px"></i>
                 </button>
@@ -52,7 +52,7 @@
                     @error('description')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
                 </td>
                 <td class="px-3 py-2 text-center text-gray-400">-</td>
-                <td class="px-3 py-2 flex gap-2 justify-end">
+                <td class="px-3 py-2 flex gap-2 justify-center">
                     <button type="submit" class="p-2 rounded bg-blue-600 text-white hover:bg-blue-700" title="Lưu">
                         <i data-feather="check" style="width:20px;height:20px"></i>
                     </button>
@@ -72,7 +72,7 @@
             <td class="px-3 py-2 text-center">
                 <span class="inline-block px-2 py-0.5 rounded bg-gray-200 text-xs text-gray-700">{{ $category->questions_count ?? 0 }}</span>
             </td>
-            <td class="px-3 py-2 flex gap-2 justify-end">
+            <td class="px-3 py-2 flex gap-2 justify-center">
                 <a href="{{ route('admin.categories.index', array_merge(request()->except('page'), ['edit' => $category->id])) }}" class="p-2 rounded hover:bg-blue-100 text-blue-600" title="Sửa">
                     <i data-feather="edit-2" style="width:20px;height:20px"></i>
                 </a>

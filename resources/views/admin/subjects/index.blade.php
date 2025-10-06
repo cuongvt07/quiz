@@ -32,7 +32,7 @@
                 </select>
                 @error('type')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
             </td>
-            <td class="px-3 py-2 flex gap-2 justify-end">
+            <td class="px-3 py-2 flex gap-2 justify-center">
                 <button type="submit" class="p-2 rounded bg-blue-600 text-white hover:bg-blue-700" title="Thêm mới">
                     <i data-feather="plus" style="width:20px;height:20px"></i>
                 </button>
@@ -58,7 +58,7 @@
                     </select>
                     @error('type')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
                 </td>
-                <td class="px-3 py-2 flex gap-2 justify-end">
+                <td class="px-3 py-2 flex gap-2 justify-center">
                     <button type="submit" class="p-2 rounded bg-blue-600 text-white hover:bg-blue-700" title="Lưu">
                         <i data-feather="check" style="width:20px;height:20px"></i>
                     </button>
@@ -77,7 +77,7 @@
                     {{ $subject->type == 'nang_luc' ? 'Năng lực' : 'Tư duy' }}
                 </span>
             </td>
-            <td class="px-3 py-2 flex gap-2 justify-end">
+            <td class="px-3 py-2 flex gap-2 justify-center">
                 <a href="{{ route('admin.subjects.index', array_merge(request()->except('page'), ['edit' => $subject->id])) }}" class="p-2 rounded hover:bg-blue-100 text-blue-600" title="Sửa">
                     <i data-feather="edit-2" style="width:20px;height:20px"></i>
                 </a>

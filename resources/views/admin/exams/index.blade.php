@@ -106,6 +106,9 @@ $type = request()->routeIs('admin.exams.nangluc') ? 'nang_luc' : (request()->rou
             <td class="px-3 py-2">{{ $exam->duration_minutes }}</td>
             <td class="px-3 py-2">{{ $exam->total_questions }}</td>
             <td class="px-3 py-2 flex gap-2 justify-end">
+                <a href="{{ route('admin.exam-attempts.exam-users', $exam) }}" class="p-2 rounded hover:bg-purple-100 text-purple-600" title="Xem lượt thi">
+                    <i data-feather="users" style="width:20px;height:20px"></i>
+                </a>
                 <a href="{{ route('admin.exams.show', $exam) }}" class="p-2 rounded hover:bg-green-100 text-green-700" title="Chi tiết đề thi">
                     <i data-feather="info" style="width:20px;height:20px"></i>
                 </a>

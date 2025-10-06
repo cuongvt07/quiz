@@ -27,6 +27,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'free_slots',
     ];
 
     /**
@@ -58,4 +59,28 @@ class User extends Authenticatable
     protected $appends = [
         'profile_photo_url',
     ];
+
+    /**
+     * Get all exam attempts for the user
+     */
+    public function examAttempts()
+    {
+        return $this->hasMany(ExamAttempt::class);
+    }
+
+    /**
+     * Get all subscriptions for the user
+     */
+    public function subscriptions()
+    {
+        return $this->hasMany(UserSubscription::class);
+    }
+
+    /**
+     * Kiểm tra user có phải admin không
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
 }

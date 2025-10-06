@@ -29,10 +29,10 @@ class ExamController extends Controller
     {
         try {
             $subject_id = $request->get('subject_id');
-            $subjects = Subject::where('type', 'nang_luc')->orderBy('name')->get();
+            $subjects = Subject::where('type', Subject::TYPE_COMPETENCY)->orderBy('name')->get();
 
             $query = Exam::with('subject')->whereHas('subject', function ($q) {
-                $q->where('type', 'nang_luc');
+                $q->where('type', Subject::TYPE_COMPETENCY);
             });
 
             if ($subject_id) {
@@ -51,10 +51,10 @@ class ExamController extends Controller
     {
         try {
             $subject_id = $request->get('subject_id');
-            $subjects = Subject::where('type', 'tu_duy')->orderBy('name')->get();
+            $subjects = Subject::where('type', Subject::TYPE_COGNITIVE)->orderBy('name')->get();
 
             $query = Exam::with('subject')->whereHas('subject', function ($q) {
-                $q->where('type', 'tu_duy');
+                $q->where('type', Subject::TYPE_COGNITIVE);
             });
 
             if ($subject_id) {
