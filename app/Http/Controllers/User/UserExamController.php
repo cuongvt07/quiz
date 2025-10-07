@@ -117,7 +117,7 @@ class UserExamController extends Controller
         $exam = $attempt->exam->load(['questions.choices']);
         
         // Lấy câu trả lời đã lưu (nếu có)
-        $savedAnswers = $attempt->answers()->pluck('answer_id', 'question_id');
+        $savedAnswers = $attempt->answers()->pluck('choice_id', 'question_id');
 
         return view('user.exams.take', compact('attempt', 'exam', 'savedAnswers'));
     }
@@ -139,17 +139,17 @@ class UserExamController extends Controller
 
         $validated = $request->validate([
             'question_id' => 'required|exists:questions,id',
-            'answer_id' => 'required|exists:question_choices,id',
+            'choice_id' => 'required|exists:question_choices,id',
         ]);
 
         // Lưu hoặc cập nhật câu trả lời
         ExamAttemptAnswer::updateOrCreate(
             [
-                'exam_attempt_id' => $attempt->id,
+                'attempt_id' => $attempt->id,
                 'question_id' => $validated['question_id'],
             ],
             [
-                'answer_id' => $validated['answer_id'],
+                'choice_id' => $validated['choice_id'],
             ]
         );
 
@@ -180,7 +180,7 @@ class UserExamController extends Controller
             $wrongCount = 0;
 
             foreach ($answers as $answer) {
-                if ($answer->answer && $answer->answer->is_correct) {
+                if ($answer->choice && $answer->choice->is_correct) {
                     $correctCount++;
                 } else {
                     $wrongCount++;

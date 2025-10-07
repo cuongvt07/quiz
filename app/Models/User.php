@@ -65,7 +65,7 @@ class User extends Authenticatable
      */
     public function examAttempts()
     {
-        return $this->hasMany(ExamAttempt::class);
+        return $this->hasMany(ExamAttempt::class, 'user_id');
     }
 
     /**

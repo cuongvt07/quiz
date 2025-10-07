@@ -85,27 +85,41 @@ class ExamAttemptController extends Controller
         $attempt->load([
             'exam.subject',
             'user',
-            'answers.question.choices',
-            'answers.answer'
+            'answers.question.questionChoices',
         ]);
 
-        // Tính toán thống kê chi tiết
-        $questions = $attempt->exam->questions()->with('choices')->get();
+        $questions = $attempt->exam->questions()->with('questionChoices')->get();
+
         $userAnswers = $attempt->answers->keyBy('question_id');
 
-        $detailedResults = $questions->map(function($question) use ($userAnswers) {
+        $detailedResults = $questions->map(function ($question) use ($userAnswers) {
             $userAnswer = $userAnswers->get($question->id);
-            $correctChoice = $question->choices->firstWhere('is_correct', true);
-            
+            $correctChoice = $question->questionChoices->firstWhere('is_correct', true);
+
             return [
-                'question' => $question,
-                'user_answer' => $userAnswer?->answer,
+                'question'       => $question,
+                'user_answer'    => $userAnswer?->choice,
                 'correct_choice' => $correctChoice,
-                'is_correct' => $userAnswer && $userAnswer->answer_id === $correctChoice?->id,
+                'is_correct'     => $userAnswer && $userAnswer->choice_id === $correctChoice?->id,
             ];
         });
 
-        return view('admin.exam-attempts.attempt-detail', compact('attempt', 'detailedResults'));
+        // Tính toán lại số liệu thống kê
+        $stats = [
+            'total_questions' => $questions->count(),
+            'correct_count' => $detailedResults->where('is_correct', true)->count(),
+            'wrong_count' => $detailedResults->whereNotNull('user_answer')->where('is_correct', false)->count(),
+            'unanswered_count' => $detailedResults->whereNull('user_answer')->count()
+        ];
+
+        // Cập nhật lại attempt
+        $attempt->update([
+            'score' => $stats['correct_count'],
+            'correct_count' => $stats['correct_count'],
+            'wrong_count' => $stats['wrong_count']
+        ]);
+
+        return view('admin.exam-attempts.attempt-detail', compact('attempt', 'detailedResults', 'stats'));
     }
 
     /**
@@ -125,23 +139,47 @@ class ExamAttemptController extends Controller
             });
         }
 
-        $attempts = $query->latest()->paginate(20);
+        $attempts = $query->latest()->paginate(10);
 
+        
         // Thống kê tổng quan
+        $baseQuery = ExamAttempt::whereNotNull('finished_at');
+        $todayStart = now()->startOfDay();
+        $todayEnd = now()->endOfDay();
+
         $stats = [
-            'total_attempts' => ExamAttempt::where('used_free_slot', true)->whereNotNull('finished_at')->count(),
-            'competency_attempts' => ExamAttempt::where('used_free_slot', true)
-                ->whereNotNull('finished_at')
+            // Tổng số lượt thi
+            'total_attempts' => (clone $baseQuery)->count(),
+            
+            // Tổng số lượt thi theo loại
+            'competency_attempts' => (clone $baseQuery)
                 ->whereHas('exam.subject', function($q) {
-                    $q->where('type', 'nangluc');
+                    $q->where('type', 'nang_luc');
                 })->count(),
-            'cognitive_attempts' => ExamAttempt::where('used_free_slot', true)
-                ->whereNotNull('finished_at')
+            'cognitive_attempts' => (clone $baseQuery)
                 ->whereHas('exam.subject', function($q) {
-                    $q->where('type', 'tuduy');
+                    $q->where('type', 'tu_duy');
                 })->count(),
-            'average_score' => ExamAttempt::where('used_free_slot', true)
-                ->whereNotNull('finished_at')
+
+            // Điểm trung bình
+            'average_score' => (clone $baseQuery)->avg('score'),
+            
+            // Thống kê trong ngày
+            'today_total' => (clone $baseQuery)
+                ->whereBetween('finished_at', [$todayStart, $todayEnd])
+                ->count(),
+            'today_competency' => (clone $baseQuery)
+                ->whereBetween('finished_at', [$todayStart, $todayEnd])
+                ->whereHas('exam.subject', function($q) {
+                    $q->where('type', 'nang_luc');
+                })->count(),
+            'today_cognitive' => (clone $baseQuery)
+                ->whereBetween('finished_at', [$todayStart, $todayEnd])
+                ->whereHas('exam.subject', function($q) {
+                    $q->where('type', 'tu_duy');
+                })->count(),
+            'today_average_score' => (clone $baseQuery)
+                ->whereBetween('finished_at', [$todayStart, $todayEnd])
                 ->avg('score'),
         ];
 

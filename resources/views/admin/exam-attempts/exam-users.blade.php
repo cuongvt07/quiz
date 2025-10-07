@@ -75,7 +75,19 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
                         @if($user->examAttempts->isNotEmpty())
-                            {{ $user->examAttempts->first()->finished_at ? $user->examAttempts->first()->finished_at->format('d/m/Y H:i') : 'Đang thi' }}
+                            @php
+                                $finishedAt = $user->examAttempts->first()->finished_at;
+                                if ($finishedAt) {
+                                    try {
+                                        $dateObj = $finishedAt instanceof \Carbon\Carbon ? $finishedAt : \Carbon\Carbon::parse($finishedAt);
+                                        echo $dateObj->format('d/m/Y H:i');
+                                    } catch (\Exception $e) {
+                                        echo $finishedAt;
+                                    }
+                                } else {
+                                    echo 'Đang thi';
+                                }
+                            @endphp
                         @else
                             -
                         @endif

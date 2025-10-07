@@ -34,43 +34,60 @@
 
     {{-- Statistics --}}
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {{-- Tổng lượt thi --}}
         <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-600 mb-1">Tổng lượt thi</p>
-                    <p class="text-3xl font-bold text-blue-600">{{ $stats['total_attempts'] }}</p>
+                    <p class="text-3xl font-bold text-blue-600">{{ number_format($stats['total_attempts']) }}</p>
+                    <p class="text-sm text-gray-500 mt-2">
+                        <span class="text-emerald-600">+{{ number_format($stats['today_total']) }}</span> hôm nay
+                    </p>
                 </div>
-                <i data-feather="list" class="w-10 h-10 text-blue-600 opacity-20"></i>
+                <i data-feather="users" class="w-10 h-10 text-blue-600 opacity-20"></i>
             </div>
         </div>
 
+        {{-- Thi Năng lực --}}
         <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-600 mb-1">Thi Năng lực</p>
-                    <p class="text-3xl font-bold text-blue-600">{{ $stats['competency_attempts'] }}</p>
+                    <p class="text-3xl font-bold text-blue-600">{{ number_format($stats['competency_attempts']) }}</p>
+                    <p class="text-sm text-gray-500 mt-2">
+                        <span class="text-emerald-600">+{{ number_format($stats['today_competency']) }}</span> hôm nay
+                    </p>
                 </div>
                 <i data-feather="zap" class="w-10 h-10 text-blue-600 opacity-20"></i>
             </div>
         </div>
 
+        {{-- Thi Tư duy --}}
         <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-600 mb-1">Thi Tư duy</p>
-                    <p class="text-3xl font-bold text-purple-600">{{ $stats['cognitive_attempts'] }}</p>
+                    <p class="text-3xl font-bold text-purple-600">{{ number_format($stats['cognitive_attempts']) }}</p>
+                    <p class="text-sm text-gray-500 mt-2">
+                        <span class="text-emerald-600">+{{ number_format($stats['today_cognitive']) }}</span> hôm nay
+                    </p>
                 </div>
                 <i data-feather="activity" class="w-10 h-10 text-purple-600 opacity-20"></i>
             </div>
         </div>
 
+        {{-- Lượt thi trong ngày --}}
         <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-600 mb-1">Điểm trung bình</p>
-                    <p class="text-3xl font-bold text-green-600">{{ round($stats['average_score'] ?? 0, 1) }}</p>
+                    <p class="text-sm text-gray-600 mb-1">Lượt thi hôm nay</p>
+                    <p class="text-3xl font-bold text-emerald-600">{{ number_format($stats['today_total']) }}</p>
+                    <p class="text-sm text-gray-500 mt-2">
+                        <span class="text-blue-600">{{ number_format($stats['today_competency']) }}</span> Năng lực,
+                        <span class="text-purple-600">{{ number_format($stats['today_cognitive']) }}</span> Tư duy
+                    </p>
                 </div>
-                <i data-feather="trending-up" class="w-10 h-10 text-green-600 opacity-20"></i>
+                <i data-feather="calendar" class="w-10 h-10 text-emerald-600 opacity-20"></i>
             </div>
         </div>
     </div>
@@ -87,7 +104,7 @@
                         Đề thi
                     </th>
                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Loại thi
+                        Loại đề 
                     </th>
                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Điểm số
@@ -118,12 +135,11 @@
                     </td>
                     <td class="px-6 py-4">
                         <div class="text-sm font-medium text-gray-900">{{ $attempt->exam->title }}</div>
-                        <div class="text-sm text-gray-500">{{ $attempt->exam->subject->name }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-center">
                         <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
                             {{ $attempt->exam->isCompetency() ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' }}">
-                            {{ $attempt->type_name }}
+                            {{ $attempt->exam?->subject?->name }}
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-center">
@@ -136,8 +152,11 @@
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
-                        <div class="text-gray-900">{{ $attempt->finished_at->format('d/m/Y') }}</div>
-                        <div class="text-gray-500">{{ $attempt->finished_at->format('H:i') }}</div>
+                        @php
+                            $finishedAt = is_object($attempt->finished_at) ? $attempt->finished_at : \Carbon\Carbon::parse($attempt->finished_at);
+                        @endphp
+                        <div class="text-gray-900">{{ $finishedAt->format('d/m/Y') }}</div>
+                        <div class="text-gray-500">{{ $finishedAt->format('H:i') }}</div>
                         @if($attempt->duration_in_minutes)
                             <div class="text-xs text-gray-400 mt-1">
                                 ({{ $attempt->duration_in_minutes }} phút)

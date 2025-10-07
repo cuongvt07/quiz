@@ -26,7 +26,7 @@ class Exam extends Model
      */
     public function attempts(): HasMany
     {
-        return $this->hasMany(ExamAttempt::class);
+        return $this->hasMany(ExamAttempt::class, 'exam_id');
     }
 
     /**
