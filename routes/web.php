@@ -17,8 +17,15 @@ use App\Http\Controllers\ImportController;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+Route::get('/', [\App\Http\Controllers\Frontend\HomeController::class, 'index'])->name('home');
+
+// Frontend exam routes
+Route::prefix('exam-list')->name('exams.')->group(function() {
+    Route::get('/', [\App\Http\Controllers\Frontend\ExamController::class, 'index'])->name('list');
+    Route::get('/type/{type}', [\App\Http\Controllers\Frontend\ExamController::class, 'index'])->name('list.type');
+    Route::get('/detail/{exam}', [\App\Http\Controllers\Frontend\ExamController::class, 'show'])->name('show');
+    Route::post('/start/{exam}', [\App\Http\Controllers\Frontend\ExamController::class, 'start'])->name('start')->middleware('auth');
+    Route::get('/continue/{attempt}', [\App\Http\Controllers\Frontend\ExamController::class, 'continue'])->name('continue')->middleware('auth');
 });
 
 Route::middleware([
@@ -29,16 +36,22 @@ Route::middleware([
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
-    
-    // Quiz routes
-    Route::get('/quizzes', App\Http\Livewire\Quiz\QuizList::class)->name('quizzes');
-    Route::get('/quiz/{category:slug}', App\Http\Livewire\Quiz\QuizShow::class)->name('quiz.show');
-    Route::get('/quiz/{category:slug}/result', App\Http\Livewire\Quiz\QuizResult::class)->name('quiz.result');
+
+    // User Profile routes
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'show'])->name('profile');
+    Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::delete('/profile', [\App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
+        
+    // User Exam routes
+    Route::prefix('exam-history')->name('exam-history.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\User\ExamHistoryController::class, 'index'])->name('index');
+        Route::get('/detail/{attempt}', [\App\Http\Controllers\User\ExamHistoryController::class, 'show'])->name('show');
+    });
     
     // User Exam routes
     Route::prefix('exams')->name('user.exams.')->group(function () {
         Route::get('/', [\App\Http\Controllers\User\UserExamController::class, 'index'])->name('index');
-        Route::get('/history', [\App\Http\Controllers\User\UserExamController::class, 'history'])->name('history');
         Route::get('/{exam}', [\App\Http\Controllers\User\UserExamController::class, 'show'])->name('show');
         Route::post('/{exam}/start', [\App\Http\Controllers\User\UserExamController::class, 'start'])->name('start');
         Route::get('/{attempt}/take', [\App\Http\Controllers\User\UserExamController::class, 'take'])->name('take');
