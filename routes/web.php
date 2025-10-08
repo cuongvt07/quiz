@@ -57,6 +57,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Exam Attempts Management routes
     Route::prefix('exam-attempts')->name('exam-attempts.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\ExamAttemptController::class, 'index'])->name('index');
+        Route::get('/by-exam', [\App\Http\Controllers\Admin\ExamAttemptController::class, 'byExam'])->name('by-exam');
         Route::get('/exam/{exam}/users', [\App\Http\Controllers\Admin\ExamAttemptController::class, 'examUsers'])->name('exam-users');
         Route::get('/exam/{exam}/user/{user}', [\App\Http\Controllers\Admin\ExamAttemptController::class, 'userAttempts'])->name('user-attempts');
         Route::get('/attempt/{attempt}', [\App\Http\Controllers\Admin\ExamAttemptController::class, 'attemptDetail'])->name('attempt-detail');
@@ -87,9 +88,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/import', [ImportController::class, 'import'])->name('import');
     
     // Admin dashboard route
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
     
     // Danh mục câu hỏi
     Route::get('categories', [AdminController::class, 'indexCategories'])->name('categories.index');

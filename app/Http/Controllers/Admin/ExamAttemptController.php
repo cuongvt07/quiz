@@ -8,9 +8,35 @@ use App\Models\ExamAttempt;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class ExamAttemptController extends Controller
 {
+    /**
+     * Hiển thị danh sách đề thi kèm thống kê
+     */
+    public function byExam()
+    {
+        $exams = Cache::remember('admin.exam-attempts.by-exam', 60, function () {
+            return Exam::with('subject')
+                ->withCount(['attempts as total_attempts' => function ($query) {
+                    $query->where('used_free_slot', true);
+                }])
+                ->withCount(['attempts as total_users' => function ($query) {
+                    $query->where('used_free_slot', true)
+                        ->select(DB::raw('count(distinct user_id)'));
+                }])
+                ->withAvg(['attempts as avg_score' => function ($query) {
+                    $query->where('used_free_slot', true)
+                        ->whereNotNull('score');
+                }], 'score')
+                ->orderBy('total_attempts', 'desc')
+                ->paginate(15);
+        });
+
+        return view('admin.exam-attempts.by-exam', compact('exams'));
+    }
+
     /**
      * Hiển thị danh sách user đã thi một đề thi cụ thể
      */
@@ -133,14 +159,13 @@ class ExamAttemptController extends Controller
             ->where('used_free_slot', true)
             ->whereNotNull('finished_at');
 
-        if ($type && in_array($type, ['nangluc', 'tuduy'])) {
+        if ($type && in_array($type, ['nang_luc', 'tu_duy'])) {
             $query->whereHas('exam.subject', function($q) use ($type) {
                 $q->where('type', $type);
             });
         }
 
         $attempts = $query->latest()->paginate(10);
-
         
         // Thống kê tổng quan
         $baseQuery = ExamAttempt::whereNotNull('finished_at');

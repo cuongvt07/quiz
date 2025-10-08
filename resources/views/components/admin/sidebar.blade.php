@@ -120,17 +120,22 @@
         </button>
         <ul x-show="open" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 max-h-0" x-transition:enter-end="opacity-100 max-h-40" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 max-h-40" x-transition:leave-end="opacity-0 max-h-0" class="ml-6 mt-1 space-y-1 overflow-hidden" style="max-height:10rem">
             <li>
-                <a href="{{ route('admin.exam-attempts.index') }}" class="flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-50 {{ request()->routeIs('admin.exam-attempts.index') ? 'bg-blue-50 font-bold text-blue-700' : '' }}">
+                <a href="{{ route('admin.exam-attempts.index') }}" class="flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-50 {{ request()->routeIs('admin.exam-attempts.index') && !request('type') && !request()->routeIs('admin.exam-attempts.by-exam') ? 'bg-blue-50 font-bold text-blue-700' : '' }}">
                     <i data-feather="list" class="w-4 h-4"></i> Tất cả lượt thi
                 </a>
             </li>
             <li>
-                <a href="{{ route('admin.exam-attempts.index', ['type' => 'nangluc']) }}" class="flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-50 {{ request()->routeIs('admin.exam-attempts.index') && request('type') == 'nangluc' ? 'bg-blue-50 font-bold text-blue-700' : '' }}">
+                <a href="{{ route('admin.exam-attempts.by-exam') }}" class="flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-50 {{ request()->routeIs('admin.exam-attempts.by-exam') ? 'bg-blue-50 font-bold text-blue-700' : '' }}">
+                    <i data-feather="file-text" class="w-4 h-4"></i> Quản lý theo đề thi
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('admin.exam-attempts.index', ['type' => 'nang_luc']) }}" class="flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-50 {{ request()->routeIs('admin.exam-attempts.index') && request('type') == 'nang_luc' ? 'bg-blue-50 font-bold text-blue-700' : '' }}">
                     <i data-feather="zap" class="w-4 h-4"></i> Lượt thi Năng lực
                 </a>
             </li>
             <li>
-                <a href="{{ route('admin.exam-attempts.index', ['type' => 'tuduy']) }}" class="flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-50 {{ request()->routeIs('admin.exam-attempts.index') && request('type') == 'tuduy' ? 'bg-blue-50 font-bold text-blue-700' : '' }}">
+                <a href="{{ route('admin.exam-attempts.index', ['type' => 'tu_duy']) }}" class="flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-50 {{ request()->routeIs('admin.exam-attempts.index') && request('type') == 'tu_duy' ? 'bg-blue-50 font-bold text-blue-700' : '' }}">
                     <i data-feather="activity" class="w-4 h-4"></i> Lượt thi Tư duy
                 </a>
             </li>

@@ -11,8 +11,8 @@ class Subject extends Model
     use HasFactory;
 
     // Constants cho loại thi
-    const TYPE_COMPETENCY = 'nangluc';  // Năng lực
-    const TYPE_COGNITIVE = 'tuduy';     // Tư duy
+    const TYPE_COMPETENCY = 'nang_luc';  // Năng lực
+    const TYPE_COGNITIVE = 'tu_duy';     // Tư duy
 
     protected $fillable = ['name', 'type'];
 

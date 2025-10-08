@@ -20,13 +20,13 @@
             <i data-feather="list" class="w-4 h-4 inline mr-2"></i>
             Tất cả
         </a>
-        <a href="{{ route('admin.exam-attempts.index', ['type' => 'nangluc']) }}"
-           class="px-6 py-3 rounded-lg font-medium transition {{ $type === 'nangluc' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
+        <a href="{{ route('admin.exam-attempts.index', ['type' => 'nang_luc']) }}"
+           class="px-6 py-3 rounded-lg font-medium transition {{ $type === 'nang_luc' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
             <i data-feather="zap" class="w-4 h-4 inline mr-2"></i>
             Năng lực
         </a>
-        <a href="{{ route('admin.exam-attempts.index', ['type' => 'tuduy']) }}"
-           class="px-6 py-3 rounded-lg font-medium transition {{ $type === 'tuduy' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
+        <a href="{{ route('admin.exam-attempts.index', ['type' => 'tu_duy']) }}"
+           class="px-6 py-3 rounded-lg font-medium transition {{ $type === 'tu_duy' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
             <i data-feather="activity" class="w-4 h-4 inline mr-2"></i>
             Tư duy
         </a>
