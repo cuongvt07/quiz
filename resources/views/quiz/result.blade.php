@@ -20,7 +20,7 @@
                             <div class="space-y-4">
                                 <p>{{ $question->content }}</p>
                                 <div class="space-y-2">
-                                    @foreach($question->choices as $choice)
+                                    @foreach($question->questionChoices as $choice)
                                         <div class="flex items-center">
                                             <div class="flex-shrink-0">
                                                 @if($choice->is_correct)
@@ -31,7 +31,7 @@
                                                     </span>
                                                 @endif
                                             </div>
-                                            <p class="ml-3 text-sm text-gray-700">{{ $choice->content }}</p>
+                                            <p class="ml-3 text-sm text-gray-700">{{ $choice->name }}</p>
                                         </div>
                                     @endforeach
                                 </div>
@@ -42,7 +42,7 @@
             </dl>
         </div>
         <div class="bg-gray-50 px-4 py-4 sm:px-6">
-            <a href="{{ route('quizzes') }}" 
+            <a href="{{ route('exams.list') }}" 
                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                 Quay lại danh sách
             </a>

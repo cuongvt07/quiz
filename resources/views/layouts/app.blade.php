@@ -15,9 +15,6 @@
         <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
         <script src="https://cdn.jsdelivr.net/npm/feather-icons@4.29.0/dist/feather.min.js"></script>
-
-        <!-- Styles -->
-        @livewireStyles
     </head>
     <body class="font-sans antialiased">
         <x-banner />
@@ -36,11 +33,12 @@
 
             <!-- Page Content -->
             <main>
-                {{ $slot }}
+                @yield('content')
             </main>
         </div>
 
         @stack('modals')
+        @stack('scripts')
 
         @livewireScripts
     </body>

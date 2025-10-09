@@ -52,10 +52,6 @@
                     </li>
                     <li class="flex items-start">
                         <i data-lucide="check-circle" class="w-5 h-5 text-green-600 mr-2 mt-0.5"></i>
-                        <span>Bạn có thể lưu câu trả lời và tiếp tục làm bài sau</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i data-lucide="check-circle" class="w-5 h-5 text-green-600 mr-2 mt-0.5"></i>
                         <span>Nhấn "Nộp bài" khi hoàn thành để xem kết quả</span>
                     </li>
                 </ul>

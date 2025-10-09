@@ -15,7 +15,8 @@
     
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="{{ asset('js/toast.js') }}" defer></script>
     
     <!-- Additional Styles -->
     <style>
@@ -255,6 +256,28 @@
     <script>
         let mobileMenuOpen = false;
     </script>
+    <!-- Toast Container -->
+    <x-toast-container />
+
+    @if(session('success') || session('error') || session('info') || session('warning'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                @if(session('success'))
+                    toast.success(@json(session('success')));
+                @endif
+                @if(session('error'))
+                    toast.error(@json(session('error')));
+                @endif
+                @if(session('info'))
+                    toast.info(@json(session('info')));
+                @endif
+                @if(session('warning'))
+                    toast.warning(@json(session('warning')));
+                @endif
+            });
+        </script>
+    @endif
+
     @stack('scripts')
 </body>
 </html>

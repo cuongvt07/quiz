@@ -76,23 +76,21 @@ class ExamController extends Controller
 
     public function start(Request $request, Exam $exam)
     {
-        // Kiểm tra xem có attempt chưa hoàn thành không
-        $existingAttempt = ExamAttempt::where('user_id', auth()->id())
-            ->where('exam_id', $exam->id)
-            ->where('is_completed', false)
-            ->first();
-
-        if ($existingAttempt) {
-            return redirect()->route('exams.continue', $existingAttempt);
+        // Kiểm tra xem user còn lượt thi free không
+        if (!$exam->canUserAttempt(auth()->user())) {
+            return redirect()->route('exams.show', $exam)
+                ->with('error', 'Bạn đã hết lượt thi miễn phí cho đề thi này');
         }
 
         // Tạo attempt mới
         $attempt = ExamAttempt::create([
             'user_id' => auth()->id(),
             'exam_id' => $exam->id,
-            'start_time' => now(),
-            'end_time' => now()->addMinutes($exam->duration_minutes),
-            'is_completed' => false
+            'started_at' => now(),
+            'used_free_slot' => true,
+            'score' => 0,
+            'correct_count' => 0,
+            'wrong_count' => 0
         ]);
 
         return redirect()->route('user.exams.take', $attempt);

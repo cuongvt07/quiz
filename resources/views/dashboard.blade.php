@@ -19,7 +19,7 @@
                             </svg>
                         </div>
                         <p class="mb-6 opacity-90">Làm các bài trắc nghiệm theo danh mục</p>
-                        <a href="{{ route('quizzes') }}" class="inline-block px-4 py-2 bg-white text-indigo-600 rounded-lg font-medium hover:bg-gray-100 transition">
+                        <a href="{{ route('exams.list') }}" class="inline-block px-4 py-2 bg-white text-indigo-600 rounded-lg font-medium hover:bg-gray-100 transition">
                             Bắt đầu làm bài
                         </a>
                     </div>

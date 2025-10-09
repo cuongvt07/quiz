@@ -47,4 +47,14 @@ class Question extends Model
         return $this->belongsToMany(Exam::class, 'exam_questions')
                     ->withTimestamps();
     }
+
+    /**
+     * Alias for questionChoices()
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function choices(): HasMany
+    {
+        return $this->questionChoices();
+    }
 }

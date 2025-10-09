@@ -80,10 +80,26 @@ class Exam extends Model
     }
 
     /**
-     * Kiểm tra user còn lượt thi không
+     * Kiểm tra user còn lượt thi miễn phí không
+     * 
+     * Logic: 
+     * - Nếu còn free_slots > 0: cho phép thi (không quan tâm số lần đã thi)
+     * - Nếu free_slots = 0: kiểm tra đã thi >= 2 lần chưa
      */
     public function canUserAttempt(User $user): bool
     {
-        return $user->free_slots > 0;
+        // Nếu còn free_slots thì luôn cho thi
+        if ($user->free_slots > 0) {
+            return true;
+        }
+
+        // Nếu hết free_slots thì kiểm tra số lần đã thi
+        $usedFreeAttempts = $this->attempts()
+            ->where('user_id', $user->id)
+            ->where('used_free_slot', true)
+            ->count();
+
+        // Chỉ block khi hết free_slots VÀ đã thi >= 2 lần
+        return $usedFreeAttempts < 2;
     }
 }
