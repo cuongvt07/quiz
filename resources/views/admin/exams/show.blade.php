@@ -51,7 +51,6 @@
                     <i data-feather="plus" class="w-4 h-4"></i>
                 </button>
             </div>
-            <div><b>Đã thêm:</b> <span id="currentQuestionCount">{{ $exam->questions->count() }}</span> / <span id="displayedTotalQuestions">{{ $exam->total_questions }}</span></div>
         </div>
     </div>
 
@@ -80,7 +79,7 @@
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nội dung câu hỏi</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Danh mục</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Loại câu hỏi</th>
                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Số đáp án</th>
                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Đáp án đúng</th>
                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Trạng thái</th>
@@ -103,13 +102,13 @@
                                     placeholder="Nhập nội dung câu hỏi {{ $i + 1 }}...">
                             </td>
                             <td class="px-4 py-3">
-                                <select name="questions[{{ $i }}][category_id]" 
+                                <select name="questions[{{ $i }}][loai]" 
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
-                                    <option value="">-- Chọn danh mục --</option>
-                                    @foreach($categories as $category)
-                                        <option value="{{ $category->id }}" 
-                                            {{ ($question?->category_id ?? null) == $category->id ? 'selected' : '' }}>
-                                            {{ $category->name }}
+                                    <option value="">-- Chọn loại --</option>
+                                    @foreach($questionTypes as $value => $label)
+                                        <option value="{{ $value }}" 
+                                            {{ ($question?->loai ?? null) == $value ? 'selected' : '' }}>
+                                            {{ $label }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -291,7 +290,6 @@ function initToggleSwitches() {
 function decrementQuestionCount() {
     const input = document.getElementById('totalQuestionsInput');
     const display = document.getElementById('totalQuestionsDisplay');
-    const displayedTotal = document.getElementById('displayedTotalQuestions');
     const decrementBtn = document.getElementById('decrementBtn');
     let current = parseInt(input.value);
     
@@ -303,7 +301,6 @@ function decrementQuestionCount() {
     current -= 1;
     input.value = current;
     display.textContent = current;
-    displayedTotal.textContent = current;
     updateQuestionRows(current);
     
     // Update button state
@@ -314,13 +311,11 @@ function decrementQuestionCount() {
 function incrementQuestionCount() {
     const input = document.getElementById('totalQuestionsInput');
     const display = document.getElementById('totalQuestionsDisplay');
-    const displayedTotal = document.getElementById('displayedTotalQuestions');
     const decrementBtn = document.getElementById('decrementBtn');
     let current = parseInt(input.value);
     current += 1;
     input.value = current;
     display.textContent = current;
-    displayedTotal.textContent = current;
     updateQuestionRows(current);
     
     // Enable decrement if now > initial
@@ -778,10 +773,10 @@ document.getElementById('questionsForm')?.addEventListener('submit', async funct
         showNotification(data.message || 'Đã lưu thành công', 'success');
         
         // Update current count after batch save
-        if (data.created_count) {
-            const currentCount = parseInt(document.getElementById('currentQuestionCount').textContent);
-            document.getElementById('currentQuestionCount').textContent = currentCount + data.created_count;
-        }
+        // if (data.created_count) {
+        //     const currentCount = parseInt(document.getElementById('currentQuestionCount').textContent);
+        //     document.getElementById('currentQuestionCount').textContent = currentCount + data.created_count;
+        // }
         
         // Redirect to show page or reload
         if (data.redirect) {
@@ -848,17 +843,22 @@ async function submitImport() {
     }
 }
 
-// Bind import button click event
-document.getElementById('btnImportQuestions')?.addEventListener('click', openImportModal);
-
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     if (window.feather) feather.replace();
     initToggleSwitches();
     
+    // Bind import button click event
+    const importBtn = document.getElementById('btnImportQuestions');
+    if (importBtn) {
+        importBtn.addEventListener('click', openImportModal);
+    }
+    
     // Initial state for decrement button
     const decrementBtn = document.getElementById('decrementBtn');
-    decrementBtn.disabled = {{ $exam->total_questions }} <= initialTotalQuestions;
+    if (decrementBtn) {
+        decrementBtn.disabled = {{ $exam->total_questions }} <= initialTotalQuestions;
+    }
 });
 </script>
 @endsection

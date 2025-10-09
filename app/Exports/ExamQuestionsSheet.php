@@ -9,19 +9,17 @@ use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
-use App\Models\Category;
+use App\Models\Question;
 
 class ExamQuestionsSheet implements WithTitle, WithHeadings, WithStyles, FromArray, WithColumnFormatting, WithCustomStartCell
 {
     protected $exam;
     protected $createTemplate;
-    protected $categories;
 
     public function __construct($exam = null, $createTemplate = false)
     {
         $this->exam = $exam;
         $this->createTemplate = $createTemplate;
-        $this->categories = Category::select('id', 'name')->get();
     }
 
     public function startCell(): string
@@ -30,14 +28,14 @@ class ExamQuestionsSheet implements WithTitle, WithHeadings, WithStyles, FromArr
     }
 
     public function title(): string
-    {
+{
         return 'Câu hỏi';
     }
 
     public function headings(): array
     {
         return [[
-            'danh_muc',
+            'loai',
             'noi_dung_cau_hoi',
             'dap_an_a',
             'dap_an_b',
@@ -52,7 +50,6 @@ class ExamQuestionsSheet implements WithTitle, WithHeadings, WithStyles, FromArr
             'giai_thich_c',
             'giai_thich_d',
             'hien_thi_cau_hoi',
-            'category_id',
         ]];
     }
 
@@ -70,22 +67,20 @@ class ExamQuestionsSheet implements WithTitle, WithHeadings, WithStyles, FromArr
         if ($this->createTemplate) {
             return [
                 [
-                    'Dễ',
+                    'nhan_biet', // Loại câu hỏi: nhận biết
                     'Câu hỏi mẫu: 2 + 2 = ?',
                     '2', '3', '4', '5',
                     '0', '0', '1', '0',
                     'Sai', 'Sai', 'Đúng', '',
-                    '1',
-                    '=IF(A2="Dễ",1,IF(A2="Trung bình",2,IF(A2="Khá",3,IF(A2="Nâng cao",4,""))))',
+                    '1'
                 ],
                 [
-                    'Trung bình',
+                    'thong_hieu', // Loại câu hỏi: thông hiểu
                     'Thủ đô Việt Nam là?',
                     'Hà Nội', 'TP.HCM', 'Huế', 'Đà Nẵng',
                     '1', '0', '0', '0',
                     'Đúng', 'Sai', 'Sai', 'Sai',
-                    '1',
-                    '=IF(A3="Dễ",1,IF(A3="Trung bình",2,IF(A3="Khá",3,IF(A3="Nâng cao",4,""))))',
+                    '1'
                 ]
             ];
         }
@@ -95,11 +90,9 @@ class ExamQuestionsSheet implements WithTitle, WithHeadings, WithStyles, FromArr
             $rows = [];
             foreach ($this->exam->questions as $question) {
                 $choices = $question->questionChoices->sortBy('id')->values();
-                $category = $this->categories->firstWhere('id', $question->category_id);
-                $categoryName = $category ? $category->name : '';
 
                 $row = [
-                    $categoryName,
+                    $question->loai,
                     $question->question,
                 ];
 
@@ -117,7 +110,6 @@ class ExamQuestionsSheet implements WithTitle, WithHeadings, WithStyles, FromArr
                 }
 
                 $row[] = $question->is_active ? '1' : '0';
-                $row[] = $question->category_id ?? '';
 
                 $rows[] = $row;
             }
@@ -131,15 +123,15 @@ class ExamQuestionsSheet implements WithTitle, WithHeadings, WithStyles, FromArr
     {
         $highestRow = max($sheet->getHighestDataRow(), 10);
 
-        // 🔽 Dropdown danh mục
-        $categoryNames = $this->categories->pluck('name')->implode(',');
+        // 🔽 Dropdown loại câu hỏi
+        $loaiList = implode(',', array_keys(Question::getDanhSachLoai()));
         for ($row = 2; $row <= $highestRow + 10; $row++) {
             $validation = $sheet->getCell("A{$row}")->getDataValidation();
             $validation->setType(DataValidation::TYPE_LIST);
             $validation->setErrorStyle(DataValidation::STYLE_STOP);
             $validation->setAllowBlank(false);
             $validation->setShowDropDown(true);
-            $validation->setFormula1('"' . $categoryNames . '"');
+            $validation->setFormula1('"' . $loaiList . '"');
         }
 
         // 🔽 Dropdown 1/0 cho G-J, O
@@ -154,20 +146,15 @@ class ExamQuestionsSheet implements WithTitle, WithHeadings, WithStyles, FromArr
             }
         }
 
-        // 🧮 Công thức tự động điền category_id
-        for ($row = 2; $row <= $highestRow + 10; $row++) {
-            $sheet->setCellValue("P{$row}", '=IF(A'.$row.'="Dễ",1,IF(A'.$row.'="Trung bình",2,IF(A'.$row.'="Khá",3,IF(A'.$row.'="Nâng cao",4,""))))');
-        }
-
-        // 🗂️ Bảng danh mục phụ ở bên cạnh (từ cột R)
-        $sheet->setCellValue('R1', 'BẢNG DANH MỤC');
-        $sheet->setCellValue('R2', 'Tên danh mục');
-        $sheet->setCellValue('S2', 'ID');
+        // 🗂️ Bảng loại câu hỏi ở bên cạnh (từ cột R)
+        $sheet->setCellValue('R1', 'LOẠI CÂU HỎI');
+        $sheet->setCellValue('R2', 'Mã');
+        $sheet->setCellValue('S2', 'Tên hiển thị');
 
         $rowIndex = 3;
-        foreach ($this->categories as $cat) {
-            $sheet->setCellValue("R{$rowIndex}", $cat->name);
-            $sheet->setCellValue("S{$rowIndex}", $cat->id);
+        foreach (Question::getDanhSachLoai() as $key => $value) {
+            $sheet->setCellValue("R{$rowIndex}", $key);
+            $sheet->setCellValue("S{$rowIndex}", $value);
             $rowIndex++;
         }
 

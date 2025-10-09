@@ -115,9 +115,9 @@ class ExamController extends Controller
     public function show(Exam $exam)
     {
         try {
-            $exam->load(['subject', 'questions.category']);
-            $categories = Category::orderBy('name')->get();
-            return view('admin.exams.show', compact('exam', 'categories'));
+            $exam->load(['subject', 'questions']);
+            $questionTypes = Question::getDanhSachLoai();
+            return view('admin.exams.show', compact('exam', 'questionTypes'));
         } catch (\Throwable $e) {
             return $this->handleException($e, 'Lỗi khi hiển thị chi tiết đề thi', ['exam_id' => $exam->id]);
         }
@@ -257,8 +257,19 @@ class ExamController extends Controller
                 'total_questions' => 'required|integer|min:1',
                 'questions' => 'required|array|min:1',
                 'questions.*.question' => 'required|string|max:1000',
-                'questions.*.category_id' => 'required|exists:categories,id',
-                'questions.*.answers' => 'nullable|array',
+                'questions.*.loai' => [
+                    'required',
+                    'string',
+                    \Illuminate\Validation\Rule::in([
+                        Question::LOAI_NHAN_BIET,
+                        Question::LOAI_THONG_HIEU,
+                        Question::LOAI_VAN_DUNG,
+                        Question::LOAI_PHAN_TICH,
+                        Question::LOAI_TONG_HOP,
+                        Question::LOAI_DANH_GIA,
+                    ]),
+                ],
+                'questions.*.answers' => 'required|array|min:1',
                 'questions.*.answers.*.name' => 'required_with:questions.*.answers|string|max:500',
                 'questions.*.answers.*.explanation' => 'nullable|string|max:1000',
                 'questions.*.answers.*.is_correct' => 'boolean',
@@ -277,7 +288,7 @@ class ExamController extends Controller
                     ['id' => $data['id'] ?? null],
                     [
                         'question' => $data['question'],
-                        'category_id' => $data['category_id'],
+                        'loai' => $data['loai'],
                         'is_active' => $data['is_active'] ?? 1, 
                     ]
                 );
