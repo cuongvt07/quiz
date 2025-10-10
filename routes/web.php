@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\Admin\QuestionBankController;
 
 /*
 |--------------------------------------------------------------------------
@@ -86,6 +87,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Dashboard
     Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
 
+    // Lịch sử thi
+    Route::prefix('exam-attempts')->name('exam-attempts.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ExamAttemptController::class, 'index'])->name('index');
+        Route::get('/by-exam', [\App\Http\Controllers\Admin\ExamAttemptController::class, 'byExam'])->name('by-exam');
+        Route::get('/exam/{exam}/users', [\App\Http\Controllers\Admin\ExamAttemptController::class, 'examUsers'])->name('exam-users');
+        Route::get('/exam/{exam}/user/{user}', [\App\Http\Controllers\Admin\ExamAttemptController::class, 'userAttempts'])->name('user-attempts');
+        Route::get('/attempt/{attempt}', [\App\Http\Controllers\Admin\ExamAttemptController::class, 'attemptDetail'])->name('attempt-detail');
+        Route::delete('/attempt/{attempt}', [\App\Http\Controllers\Admin\ExamAttemptController::class, 'destroy'])->name('destroy');
+    });
+
     // Gói nâng cấp
     Route::get('subscription-plans', [\App\Http\Controllers\SubscriptionPlanController::class, 'index'])->name('subscription_plans.index');
     Route::post('subscription-plans', [\App\Http\Controllers\SubscriptionPlanController::class, 'store'])->name('subscription_plans.store');
@@ -114,14 +125,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('exams/{exam}/questions/{question}', [\App\Http\Controllers\ExamQuestionController::class, 'update'])->name('exam.questions.update');
     Route::delete('exams/{exam}/questions/{question}', [\App\Http\Controllers\ExamQuestionController::class, 'destroy'])->name('exam.questions.destroy');
 
-    // Danh mục
-    Route::get('categories', [AdminController::class, 'indexCategories'])->name('categories.index');
-    Route::get('categories/create', [AdminController::class, 'createCategory'])->name('categories.create');
-    Route::post('categories', [AdminController::class, 'storeCategory'])->name('categories.store');
-    Route::get('categories/{category}/edit', [AdminController::class, 'editCategory'])->name('categories.edit');
-    Route::put('categories/{category}', [AdminController::class, 'updateCategory'])->name('categories.update');
-    Route::delete('categories/{category}', [AdminController::class, 'destroyCategory'])->name('categories.destroy');
-
     // Môn học
     Route::get('subjects', [\App\Http\Controllers\SubjectController::class, 'index'])->name('subjects.index');
     Route::get('subjects/create', [\App\Http\Controllers\SubjectController::class, 'create'])->name('subjects.create');
@@ -137,6 +140,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('admins', [\App\Http\Controllers\AdminAccountController::class, 'store'])->name('admins.store');
     Route::put('admins/{admin}', [\App\Http\Controllers\AdminAccountController::class, 'update'])->name('admins.update');
     Route::delete('admins/{admin}', [\App\Http\Controllers\AdminAccountController::class, 'destroy'])->name('admins.destroy');
+
+    // Ngân hàng câu hỏi
+    Route::prefix('question-bank')->name('questions.')->group(function () {
+        Route::get('/subjects', [QuestionBankController::class, 'subjects'])->name('subjects');
+        Route::get('/list', [QuestionBankController::class, 'list'])->name('list');
+    });
 
     // Import
     Route::get('/import', [ImportController::class, 'showImportForm'])->name('import.form');
