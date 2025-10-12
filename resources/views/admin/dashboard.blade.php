@@ -144,6 +144,200 @@
             </div>
             @endforeach
         </div>
+        
+        {{-- Revenue Reports Tablist --}}
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+            <div class="bg-gray-50 p-8 border-b border-gray-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-green-600 shadow-lg">
+                        <svg class="w-5 h-5 text-white" fill="white" data-feather="dollar-sign"></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-black">Báo Cáo Doanh Thu</h2>
+                        <p class="text-xs text-gray-600 font-medium">Thống kê doanh thu từ đăng ký gói</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8" x-data="{ activeTab: 'daily' }">
+                {{-- Tab Navigation --}}
+                <div class="flex space-x-1 bg-gray-100 p-1 rounded-xl mb-6">
+                    <button @click="activeTab = 'daily'" 
+                            :class="{'bg-white shadow-lg text-blue-600': activeTab === 'daily'}"
+                            class="flex-1 py-2 px-4 text-sm font-semibold rounded-lg transition-all duration-200">
+                        Hôm Nay
+                    </button>
+                    <button @click="activeTab = 'weekly'"
+                            :class="{'bg-white shadow-lg text-blue-600': activeTab === 'weekly'}"
+                            class="flex-1 py-2 px-4 text-sm font-semibold rounded-lg transition-all duration-200">
+                        Tuần Này
+                    </button>
+                    <button @click="activeTab = 'monthly'"
+                            :class="{'bg-white shadow-lg text-blue-600': activeTab === 'monthly'}"
+                            class="flex-1 py-2 px-4 text-sm font-semibold rounded-lg transition-all duration-200">
+                        Tháng Này
+                    </button>
+                    <button @click="activeTab = 'yearly'"
+                            :class="{'bg-white shadow-lg text-blue-600': activeTab === 'yearly'}"
+                            class="flex-1 py-2 px-4 text-sm font-semibold rounded-lg transition-all duration-200">
+                        Năm Nay
+                    </button>
+                </div>
+
+                {{-- Tab Content --}}
+                <div>
+                    {{-- Daily Report --}}
+                    <div x-show="activeTab === 'daily'" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-gray-50 rounded-xl p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-sm font-semibold text-gray-600">Doanh Thu Hôm Nay</h3>
+                                    <span class="text-xs font-medium {{ $revenueStats['today']['growth'] >= 0 ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100' }} px-2 py-1 rounded-full">
+                                        {{ $revenueStats['today']['growth'] >= 0 ? '+' : '' }}{{ number_format($revenueStats['today']['growth'], 1) }}%
+                                    </span>
+                                </div>
+                                <div class="text-2xl font-bold text-black">{{ number_format($revenueStats['today']['revenue'], 0, ',', '.') }} ₫</div>
+                                <div class="mt-2 text-xs text-gray-500">So với hôm qua</div>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-xl p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-sm font-semibold text-gray-600">Đăng Ký Mới</h3>
+                                    <span class="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                                        @php
+                                            $subs = is_string($revenueStats['today']['subscriptions'])
+                                                ? json_decode($revenueStats['today']['subscriptions'], true)
+                                                : $revenueStats['today']['subscriptions'];
+                                        @endphp
+
+                                        +{{ !empty($subs) ? number_format($subs[0]['price'], 0, ',', '.') . ' ₫' : '0 ₫' }}
+                                    </span>
+                                </div>
+                                <div class="text-2xl font-bold text-black">{{ !empty($subs) ? number_format($subs[0]['price'], 0, ',', '.') . ' ₫' : '0 ₫' }}</div>
+                                <div class="mt-2 text-xs text-gray-500">Gói đăng ký mới hôm nay</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <div class="mb-6">
+                                <h3 class="text-sm font-semibold text-gray-600 mb-2">Chi Tiết Đăng Ký Hôm Nay</h3>
+                                <div class="h-[300px]">
+                                    <canvas id="dailySubscriptionsChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Weekly Report --}}
+                    <div x-show="activeTab === 'weekly'" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-gray-50 rounded-xl p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-sm font-semibold text-gray-600">Doanh Thu Tuần Này</h3>
+                                    <span class="text-xs font-medium {{ $revenueStats['weekly']['growth'] >= 0 ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100' }} px-2 py-1 rounded-full">
+                                        {{ $revenueStats['weekly']['growth'] >= 0 ? '+' : '' }}{{ number_format($revenueStats['weekly']['growth'], 1) }}%
+                                    </span>
+                                </div>
+                                <div class="text-2xl font-bold text-black">{{ number_format($revenueStats['weekly']['revenue'], 0, ',', '.') }} ₫</div>
+                                <div class="mt-2 text-xs text-gray-500">So với tuần trước</div>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-xl p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-sm font-semibold text-gray-600">Tổng Đăng Ký</h3>
+                                    <span class="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                                        +{{ $revenueStats['weekly']['subscriptions'] }}
+                                    </span>
+                                </div>
+                                <div class="text-2xl font-bold text-black">{{ $revenueStats['weekly']['subscriptions'] }}</div>
+                                <div class="mt-2 text-xs text-gray-500">Gói đăng ký tuần này</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <div class="mb-6">
+                                <h3 class="text-sm font-semibold text-gray-600 mb-2">Phân Tích Theo Ngày</h3>
+                                <div class="h-[300px]">
+                                    <canvas id="weeklySubscriptionsChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Monthly Report --}}
+                    <div x-show="activeTab === 'monthly'" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-gray-50 rounded-xl p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-sm font-semibold text-gray-600">Doanh Thu Tháng</h3>
+                                    <span class="text-xs font-medium {{ $revenueStats['monthly']['growth'] >= 0 ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100' }} px-2 py-1 rounded-full">
+                                        {{ $revenueStats['monthly']['growth'] >= 0 ? '+' : '' }}{{ number_format($revenueStats['monthly']['growth'], 1) }}%
+                                    </span>
+                                </div>
+                                <div class="text-2xl font-bold text-black">{{ number_format($revenueStats['monthly']['revenue'], 0, ',', '.') }} ₫</div>
+                                <div class="mt-2 text-xs text-gray-500">So với tháng trước</div>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-xl p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-sm font-semibold text-gray-600">Lượt Đăng Ký</h3>
+                                    <span class="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                                        +{{ $revenueStats['monthly']['subscriptions'] }}
+                                    </span>
+                                </div>
+                                <div class="text-2xl font-bold text-black">{{ $revenueStats['monthly']['subscriptions'] }}</div>
+                                <div class="mt-2 text-xs text-gray-500">Gói đăng ký tháng này</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <div class="mb-6">
+                                <h3 class="text-sm font-semibold text-gray-600 mb-2">Xu Hướng Tháng</h3>
+                                <div class="h-[300px]">
+                                    <canvas id="monthlySubscriptionsChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Yearly Report --}}
+                    <div x-show="activeTab === 'yearly'" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-gray-50 rounded-xl p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-sm font-semibold text-gray-600">Doanh Thu Năm</h3>
+                                    <span class="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                                        {{ number_format($revenueStats['yearly']['revenue'], 0, ',', '.') }} ₫
+                                    </span>
+                                </div>
+                                <div class="text-2xl font-bold text-black">{{ number_format($revenueStats['yearly']['revenue'], 0, ',', '.') }} ₫</div>
+                                <div class="mt-2 text-xs text-gray-500">Tổng doanh thu năm {{ date('Y') }}</div>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-xl p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-sm font-semibold text-gray-600">Tổng Đăng Ký</h3>
+                                    <span class="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                                        +{{ $revenueStats['yearly']['subscriptions'] }}
+                                    </span>
+                                </div>
+                                <div class="text-2xl font-bold text-black">{{ number_format($revenueStats['yearly']['subscriptions']) }}</div>
+                                <div class="mt-2 text-xs text-gray-500">Gói đăng ký năm {{ date('Y') }}</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <div class="mb-6">
+                                <h3 class="text-sm font-semibold text-gray-600 mb-2">Phân Tích Theo Quý</h3>
+                                <div class="h-[300px]">
+                                    <canvas id="yearlySubscriptionsChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         {{-- Charts --}}
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -306,14 +500,15 @@ document.querySelectorAll('.counter').forEach(function(el) {
 });
 
 // Chart data
-const labelsMonthly   = {!! json_encode($labelsPretty, $jsonFlags) !!};
-const seriesAttempts  = {!! json_encode($attemptSeries, $jsonFlags) !!};
-const seriesUsers     = {!! json_encode($userSeries, $jsonFlags) !!};
-const topExamLabels   = {!! json_encode($topExamLabels, $jsonFlags) !!};
-const topExamCounts   = {!! json_encode($topExamCounts, $jsonFlags) !!};
-const donutData       = {!! json_encode([$typeNangLuc, $typeTuDuy], $jsonFlags) !!};
-const subLabels       = {!! json_encode($subLabels, $jsonFlags) !!};
-const subTotals       = {!! json_encode($subTotals, $jsonFlags) !!};
+const revenueData = @json($revenueStats);
+const labelsMonthly   = @json($labelsPretty);
+const seriesAttempts  = @json($attemptSeries);
+const seriesUsers     = @json($userSeries);
+const topExamLabels   = @json($topExamLabels);
+const topExamCounts   = @json($topExamCounts);
+const donutData       = @json([$typeNangLuc, $typeTuDuy]);
+const subLabels       = @json($subLabels);
+const subTotals       = @json($subTotals);
 
 // Chart.js configuration
 Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
@@ -324,6 +519,147 @@ Chart.defaults.plugins.legend.labels.font = {
     size: 12,
     weight: '600'
 };
+
+// Revenue Charts
+const dailySubscriptionsChart = new Chart(document.getElementById('dailySubscriptionsChart'), {
+    type: 'line',
+    data: {
+        labels: Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`),
+        datasets: [{
+            label: 'Doanh Thu',
+            data: revenueData.today.hourly_data,
+            borderColor: '#10B981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return value.toLocaleString('vi-VN') + ' ₫';
+                    }
+                }
+            }
+        }
+    }
+});
+
+const weeklySubscriptionsChart = new Chart(document.getElementById('weeklySubscriptionsChart'), {
+    type: 'bar',
+    data: {
+        labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+        datasets: [{
+            label: 'Doanh Thu',
+            data: Object.values(revenueData.weekly.daily_data),
+            backgroundColor: '#8B5CF6',
+            borderRadius: 8
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return value.toLocaleString('vi-VN') + ' ₫';
+                    }
+                }
+            }
+        }
+    }
+});
+
+const monthlySubscriptionsChart = new Chart(document.getElementById('monthlySubscriptionsChart'), {
+    type: 'line',
+    data: {
+        labels: Array.from({length: 30}, (_, i) => i + 1),
+        datasets: [{
+            label: 'Doanh Thu',
+            data: Object.values(revenueData.monthly.daily_data),
+            borderColor: '#3B82F6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return value.toLocaleString('vi-VN') + ' ₫';
+                    }
+                }
+            },
+            x: {
+                ticks: {
+                    callback: function(value) {
+                        return 'Ngày ' + (value + 1);
+                    }
+                }
+            }
+        }
+    }
+});
+
+const yearlySubscriptionsChart = new Chart(document.getElementById('yearlySubscriptionsChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Quý 1', 'Quý 2', 'Quý 3', 'Quý 4'],
+        datasets: [{
+            label: 'Doanh Thu',
+            data: Object.values(revenueData.yearly.quarterly_data),
+            backgroundColor: [
+                'rgba(59, 130, 246, 0.8)',
+                'rgba(16, 185, 129, 0.8)',
+                'rgba(139, 92, 246, 0.8)',
+                'rgba(236, 72, 153, 0.8)'
+            ],
+            borderRadius: 8
+        }]
+    },
+    options: {
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return value.toLocaleString('vi-VN') + ' ₫';
+                    }
+                }
+            }
+        }
+    }
+});
 
 // Monthly Stats Chart
 new Chart(document.getElementById('monthlyStatsChart'), {

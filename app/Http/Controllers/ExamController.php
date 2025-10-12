@@ -39,7 +39,7 @@ class ExamController extends Controller
                 $query->where('subject_id', $subject_id);
             }
 
-            $exams = $query->orderByDesc('id')->paginate(15);
+            $exams = $query->orderByDesc('id')->paginate(10);
             return view('admin.exams.index', compact('exams', 'subjects', 'subject_id'));
         } catch (\Throwable $e) {
             return $this->handleException($e, 'Lỗi khi tải danh sách đề thi năng lực');
@@ -61,7 +61,7 @@ class ExamController extends Controller
                 $query->where('subject_id', $subject_id);
             }
 
-            $exams = $query->orderByDesc('id')->paginate(15);
+            $exams = $query->orderByDesc('id')->paginate(10);
             return view('admin.exams.index', compact('exams', 'subjects', 'subject_id'));
         } catch (\Throwable $e) {
             return $this->handleException($e, 'Lỗi khi tải danh sách đề thi tư duy');
@@ -80,7 +80,7 @@ class ExamController extends Controller
                 $query->where('subject_id', $subject_id);
             }
 
-            $exams = $query->orderByDesc('id')->paginate(15);
+            $exams = $query->orderByDesc('id')->paginate(10);
             return view('admin.exams.index', compact('exams', 'subjects', 'subject_id'));
         } catch (\Throwable $e) {
             return $this->handleException($e, 'Lỗi khi tải danh sách đề thi');

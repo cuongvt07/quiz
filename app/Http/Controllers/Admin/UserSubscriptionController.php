@@ -17,6 +17,7 @@ class UserSubscriptionController extends Controller
     public function index()
     {
         $subscriptions = UserSubscription::with(['user', 'plan'])
+            ->where('status', 'active')
             ->orderByDesc('created_at')
             ->paginate(10);
 

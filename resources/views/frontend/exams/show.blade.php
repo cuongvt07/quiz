@@ -70,14 +70,6 @@
                     <h1 class="mt-4 text-2xl font-bold text-gray-900">{{ $exam->title }}</h1>
                 </div>
 
-                <!-- Exam Description -->
-                <div class="px-6 py-4">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Mô tả</h2>
-                    <div class="prose prose-blue max-w-none">
-                        {!! $exam->description !!}
-                    </div>
-                </div>
-
                 <!-- Instructions -->
                 <div class="px-6 py-4 bg-blue-50">
                     <h2 class="text-lg font-semibold text-gray-900 mb-4">Hướng dẫn làm bài</h2>
@@ -122,12 +114,8 @@
                     <h2 class="text-lg font-semibold text-gray-900 mb-4">Thông tin bài thi</h2>
                     <dl class="space-y-4">
                         <div>
-                            <dt class="text-sm font-medium text-gray-500">Số lần đã thi</dt>
+                            <dt class="text-sm font-medium text-gray-500">Tổng lượt thi cả đề</dt>
                             <dd class="mt-1 text-2xl font-semibold text-gray-900">{{ $exam->attempts_count }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-medium text-gray-500">Điểm trung bình</dt>
-                            <dd class="mt-1 text-2xl font-semibold text-gray-900">{{ number_format($exam->average_score, 1) }}</dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Thời gian làm bài</dt>
@@ -136,7 +124,14 @@
                     </dl>
 
                     @auth
-                        @if(auth()->user()->free_slots > 0)
+                        @if($exam->total_questions == 0)
+                            <div class="mt-6">
+                                <button type="button" disabled
+                                        class="w-full text-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-400 cursor-not-allowed">
+                                    Đề thi đang update
+                                </button>
+                            </div>
+                        @elseif(auth()->user()->free_slots > 0)
                             <form action="{{ route('user.exams.start', $exam) }}" method="POST" class="mt-6">
                                 @csrf
                                 <button type="submit"

@@ -20,8 +20,15 @@ class SubscriptionRenewalController extends Controller
         try {
             DB::beginTransaction();
 
-            // Cập nhật thời gian và trạng thái
+            // Deactive gói cũ
             $subscription->update([
+                'status' => 'inactive'
+            ]);
+
+            // Tạo gói mới 
+            UserSubscription::create([
+                'user_id' => $subscription->user_id,
+                'plan_id' => $subscription->plan_id,
                 'start_date' => now(),
                 'end_date' => now()->addDays($subscription->plan->duration_days),
                 'status' => 'active'
@@ -29,7 +36,7 @@ class SubscriptionRenewalController extends Controller
 
             // Cộng thêm lượt thi cho user
             $user = $subscription->user;
-            $user->increment('free_slots', $subscription->plan->attempts);
+            DB::table('users')->where('id', $user->id)->increment('free_slots', $subscription->plan->attempts);
 
             DB::commit();
             return redirect()->back()->with('success', 'Tái đăng ký gói thành công!');

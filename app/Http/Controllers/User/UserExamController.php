@@ -374,7 +374,7 @@ class UserExamController extends Controller
             });
         }
 
-        $attempts = $query->orderByDesc('finished_at')->paginate(15);
+        $attempts = $query->orderByDesc('finished_at')->paginate(10);
 
         return view('frontend.exams.history', compact('attempts', 'type'));
     }

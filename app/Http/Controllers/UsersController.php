@@ -12,7 +12,7 @@ class UsersController extends Controller
     public function admins(Request $request)
     {
     $role = 'admin';
-    $users = User::where('role', $role)->orderByDesc('id')->paginate(15);
+    $users = User::where('role', $role)->orderByDesc('id')->paginate(10);
     $tab = 'admins';
     return view('admin.users.index', compact('users', 'tab', 'role'));
     }
@@ -21,7 +21,7 @@ class UsersController extends Controller
     public function users(Request $request)
     {
     $role = 'user';
-    $users = User::where('role', $role)->orderByDesc('id')->paginate(15);
+    $users = User::where('role', $role)->orderByDesc('id')->paginate(10);
     $tab = 'users';
     return view('admin.users.index', compact('users', 'tab', 'role'));
     }
@@ -32,7 +32,7 @@ class UsersController extends Controller
         if ($role) {
             $query->where('role', $role);
         }
-        $users = $query->orderByDesc('id')->paginate(15);
+        $users = $query->orderByDesc('id')->paginate(10);
         return view('admin.users.index', compact('users', 'role'));
     }
 

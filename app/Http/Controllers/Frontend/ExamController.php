@@ -51,17 +51,21 @@ class ExamController extends Controller
         // Lấy thống kê của bài thi
         $examStats = DB::table('exam_attempts')
             ->where('exam_id', $exam->id)
-            ->selectRaw('COUNT(*) as attempts_count, AVG(score) as average_score')
+            ->selectRaw('
+                COUNT(*) as attempts_count, 
+                AVG(score) as average_score
+            ')
             ->first();
             
         $exam->attempts_count = $examStats->attempts_count ?? 0;
         $exam->average_score = $examStats->average_score ?? 0;
 
-        // Nếu user đã đăng nhập, lấy lịch sử làm bài
+        // Nếu user đã đăng nhập, lấy lịch sử làm bài (giới hạn 5 lượt thi gần nhất)
         if (auth()->check()) {
-            $userAttempts = ExamAttempt::where('user_id', auth()->id())
+            $userAttempts = ExamAttempt::with(['answers'])
+                ->where('user_id', auth()->id())
                 ->where('exam_id', $exam->id)
-                ->latest()
+                ->latest('started_at')
                 ->take(5)
                 ->get();
 

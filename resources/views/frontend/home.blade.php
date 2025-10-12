@@ -4,180 +4,400 @@
 
 @push('styles')
 <style>
-    .gradient-overlay {
-        background: linear-gradient(rgba(59, 130, 246, 0.9), rgba(37, 99, 235, 0.9));
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+    }
+    .animate-float {
+        animation: float 3s ease-in-out infinite;
+    }
+    .bg-pattern {
+        background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtMy4zMTQgMC02IDIuNjg2LTYgNnMyLjY4NiA2IDYgNiA2LTIuNjg2IDYtNi0yLjY4Ni02LTYtNnptMCAxMGMtMi4yMDkgMC00LTEuNzkxLTQtNHMxLjc5MS00IDQtNCA0IDEuNzkxIDQgNC0xLjc5MSA0LTQgNHoiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iLjEiLz48L2c+PC9zdmc+');
     }
 </style>
 @endpush
 
 @section('content')
 <!-- Hero Section -->
-<div class="relative bg-gray-900 h-[600px]">
-    <!-- Background Image -->
-    <div class="absolute inset-0 z-0">
-        <img src="{{ asset('images/hero-bg.jpg') }}" alt="Background" class="w-full h-full object-cover">
-        <div class="absolute inset-0 gradient-overlay"></div>
+<div class="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <!-- Animated Background -->
+    <div class="absolute inset-0 overflow-hidden">
+        <div class="absolute -top-40 -right-40 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
+        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" style="animation-delay: 1s"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style="animation-delay: 2s"></div>
     </div>
-    
-    <!-- Content -->
-    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
-        <div class="flex flex-col justify-center h-full text-center">
-            <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white mb-6">
-                Kiểm tra năng lực và tư duy
-                <span class="block text-blue-200">cùng Quiz Online</span>
-            </h1>
-            <p class="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-                Hệ thống thi trắc nghiệm thông minh giúp bạn đánh giá và phát triển khả năng của mình một cách hiệu quả.
-            </p>
-            <div>
-                <a href="{{ route('exams.list') }}" 
-                   class="inline-flex items-center px-8 py-4 border border-transparent text-lg font-medium rounded-full text-blue-700 bg-white hover:bg-blue-50 transition duration-300">
-                    Bắt đầu luyện tập
-                    <svg class="ml-3 -mr-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+
+    <!-- Floating Elements -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none" id="floating-elements"></div>
+
+    <!-- Hero Content -->
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div class="mb-6 inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-lg">
+            <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+            </svg>
+            <span class="text-sm font-medium bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Nền tảng thi trắc nghiệm thông minh
+            </span>
+        </div>
+
+        <h1 class="text-5xl md:text-7xl font-black mb-6 leading-tight">
+            <span class="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Khám Phá
+            </span>
+            <br>
+            <span class="text-slate-800">Tiềm Năng Của Bạn</span>
+        </h1>
+
+        <p class="text-xl md:text-2xl text-slate-600 mb-12 max-w-3xl mx-auto font-light">
+            Đánh giá năng lực và phát triển tư duy với hệ thống kiểm tra thông minh, 
+            <span class="font-semibold text-blue-600">hiện đại và chính xác</span>
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a href="{{ route('exams.list') }}" class="hero-btn group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
+                <span class="relative z-10 flex items-center gap-2">
+                    Bắt đầu ngay
+                    <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
-                </a>
+                </span>
+                <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            </a>
+
+            <a href="#features" class="px-8 py-4 bg-white text-slate-700 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-slate-200 hover:border-blue-300">
+                Tìm hiểu thêm
+            </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="mt-16 grid grid-cols-3 gap-8 max-w-3xl mx-auto">
+            <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white">
+                <div class="flex justify-center mb-2 text-blue-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                </div>
+                <div class="text-3xl font-bold text-slate-800 mb-1"><span class="text-blue-600">100+</span></div>
+                <div class="text-sm text-slate-600">Người dùng mỗi ngày </div>
             </div>
+
+            <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white">
+                <div class="flex justify-center mb-2 text-blue-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                </div>
+                <div class="text-3xl font-bold text-slate-800 mb-1"><span class="text-blue-600">1000+</span></div>
+                <div class="text-sm text-slate-600">Câu hỏi đa dạng</div>
+            </div>
+
+            <div class="bg-white/60 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-white">
+                <div class="flex justify-center mb-2 text-blue-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                </div>
+                <div class="text-3xl font-bold text-slate-800 mb-1"><span class="text-blue-600">50K+</span></div>
+                <div class="text-sm text-slate-600">Lượt thi thành công</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll Indicator -->
+    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <div class="w-6 h-10 border-2 border-slate-400 rounded-full flex items-start justify-center p-2">
+            <div class="w-1 h-3 bg-slate-400 rounded-full"></div>
         </div>
     </div>
 </div>
 
 <!-- Features Section -->
-<div class="py-16 bg-gray-50">
+<div id="features" class="py-24 relative bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center">
-            <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-                Tại sao chọn Quiz Online?
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-bold text-slate-800 mb-4">
+                Tại sao chọn chúng tôi?
             </h2>
-            <p class="mt-4 text-lg text-gray-600">
-                Chúng tôi cung cấp nền tảng học tập và kiểm tra kiến thức hiện đại, tiện lợi
+            <p class="text-xl text-slate-600 max-w-2xl mx-auto">
+                Trải nghiệm học tập và kiểm tra với công nghệ tiên tiến
             </p>
         </div>
 
-        <div class="mt-16">
-            <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                <!-- Feature 1 -->
-                <div class="relative group">
-                    <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-                    <div class="relative bg-white p-6 rounded-lg shadow-sm">
-                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                            </svg>
-                        </div>
-                        <h3 class="mt-4 text-lg font-medium text-gray-900">Đa dạng bài thi</h3>
-                        <p class="mt-2 text-gray-600">
-                            Nhiều dạng đề thi khác nhau giúp bạn rèn luyện toàn diện các kỹ năng.
-                        </p>
-                    </div>
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Feature 1 -->
+            <div class="feature-card group relative bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-5 rounded-3xl transition-opacity"></div>
+                
+                <div class="inline-flex p-4 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white mb-6 shadow-lg">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                 </div>
 
-                <!-- Feature 2 -->
-                <div class="relative group">
-                    <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-                    <div class="relative bg-white p-6 rounded-lg shadow-sm">
-                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <h3 class="mt-4 text-lg font-medium text-gray-900">Tiết kiệm thời gian</h3>
-                        <p class="mt-2 text-gray-600">
-                            Làm bài và nhận kết quả ngay lập tức, giúp bạn học tập hiệu quả hơn.
-                        </p>
-                    </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-3">
+                    Bài kiểm tra chính xác
+                </h3>
+                <p class="text-slate-600 leading-relaxed">
+                    Đánh giá năng lực và tư duy của bạn với độ chính xác cao
+                </p>
+
+                <div class="mt-4 w-12 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transform origin-left transition-transform duration-300 scale-x-0 group-hover:scale-x-100"></div>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="feature-card group relative bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                <div class="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 opacity-0 group-hover:opacity-5 rounded-3xl transition-opacity"></div>
+                
+                <div class="inline-flex p-4 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 text-white mb-6 shadow-lg">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                 </div>
 
-                <!-- Feature 3 -->
-                <div class="relative group">
-                    <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-                    <div class="relative bg-white p-6 rounded-lg shadow-sm">
-                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                        </div>
-                        <h3 class="mt-4 text-lg font-medium text-gray-900">Theo dõi tiến độ</h3>
-                        <p class="mt-2 text-gray-600">
-                            Dễ dàng xem lại lịch sử làm bài và đánh giá sự tiến bộ của bản thân.
-                        </p>
-                    </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-3">
+                    Kết quả tức thì
+                </h3>
+                <p class="text-slate-600 leading-relaxed">
+                    Nhận phản hồi ngay lập tức sau khi hoàn thành bài thi
+                </p>
+
+                <div class="mt-4 w-12 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transform origin-left transition-transform duration-300 scale-x-0 group-hover:scale-x-100"></div>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="feature-card group relative bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                <div class="absolute inset-0 bg-gradient-to-br from-orange-500 to-red-500 opacity-0 group-hover:opacity-5 rounded-3xl transition-opacity"></div>
+                
+                <div class="inline-flex p-4 rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 text-white mb-6 shadow-lg">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
                 </div>
+
+                <h3 class="text-xl font-bold text-slate-800 mb-3">
+                    Theo dõi tiến độ
+                </h3>
+                <p class="text-slate-600 leading-relaxed">
+                    Xem sự phát triển của bạn qua từng lần làm bài
+                </p>
+
+                <div class="mt-4 w-12 h-1 bg-gradient-to-r from-orange-500 to-red-500 rounded-full transform origin-left transition-transform duration-300 scale-x-0 group-hover:scale-x-100"></div>
+            </div>
+
+            <!-- Feature 4 -->
+            <div class="feature-card group relative bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                <div class="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-500 opacity-0 group-hover:opacity-5 rounded-3xl transition-opacity"></div>
+                
+                <div class="inline-flex p-4 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 text-white mb-6 shadow-lg">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                </div>
+
+                <h3 class="text-xl font-bold text-slate-800 mb-3">
+                    Thách thức bản thân
+                </h3>
+                <p class="text-slate-600 leading-relaxed">
+                    Vượt qua giới hạn và đạt điểm số cao nhất
+                </p>
+
+                <div class="mt-4 w-12 h-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transform origin-left transition-transform duration-300 scale-x-0 group-hover:scale-x-100"></div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Exam Types Section -->
-<div class="py-16 bg-white">
+<div class="py-24 bg-gradient-to-b from-white to-slate-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
-            <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-                Khám phá các loại đề thi
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 rounded-full mb-4">
+                <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                </svg>
+                <span class="text-sm font-semibold text-blue-600">Chọn loại bài thi</span>
+            </div>
+            <h2 class="text-4xl md:text-5xl font-bold text-slate-800 mb-4">
+                Hai Hướng Phát Triển
             </h2>
-            <p class="mt-4 text-lg text-gray-600">
-                Chọn loại đề thi phù hợp với mục tiêu học tập của bạn
+            <p class="text-xl text-slate-600 max-w-2xl mx-auto">
+                Chọn lộ trình phù hợp để phát triển bản thân
             </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Năng lực -->
-            <div class="relative rounded-2xl overflow-hidden group">
-                <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-700 opacity-90 group-hover:opacity-95 transition-opacity"></div>
-                <img src="{{ asset('images/competency.jpg') }}" alt="Năng lực" class="w-full h-80 object-cover">
-                <div class="absolute inset-0 flex flex-col justify-center px-8 text-white">
-                    <h3 class="text-2xl font-bold mb-4">Đề thi Năng lực</h3>
-                    <p class="mb-6 text-blue-100">Kiểm tra khả năng tư duy logic, xử lý thông tin và giải quyết vấn đề.</p>
-                    <a href="{{ route('exams.list', ['type' => 'nangluc']) }}" 
-                       class="inline-flex items-center px-6 py-3 border-2 border-white text-sm font-medium rounded-full text-white hover:bg-white hover:text-blue-600 transition-colors w-fit">
-                        Xem chi tiết
-                        <svg class="ml-2 -mr-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Năng Lực -->
+            <div class="exam-card group relative bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.02]">
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 opacity-5 group-hover:opacity-10 transition-opacity"></div>
+                
+                <div class="relative p-8 md:p-10">
+                    <!-- Header -->
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="flex-1">
+                            <div class="inline-flex p-4 rounded-2xl bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 text-white mb-4 shadow-lg">
+                                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-3xl font-bold text-slate-800 mb-2">
+                                Năng Lực
+                            </h3>
+                            <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">
+                                Competency Assessment
+                            </p>
+                        </div>
+                    </div>
+
+                    <p class="text-lg text-slate-600 mb-8 leading-relaxed">
+                        Kiểm tra khả năng xử lý thông tin, tư duy logic và giải quyết vấn đề phức tạp
+                    </p>
+
+                    <!-- Stats -->
+                    <div class="grid grid-cols-3 gap-4 mb-8">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-slate-800 mb-1">500+</div>
+                            <div class="text-xs text-slate-500">Câu hỏi</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-slate-800 mb-1">Nhiều dạng</div>
+                            <div class="text-xs text-slate-500">Bài thi</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-slate-800 mb-1">Đa dạng</div>
+                            <div class="text-xs text-slate-500">Mức độ</div>
+                        </div>
+                    </div>
+
+                    <!-- Features -->
+                    <div class="space-y-3 mb-8">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500"></div>
+                            <span class="text-slate-700">Phân tích logic</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500"></div>
+                            <span class="text-slate-700">Xử lý số liệu</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500"></div>
+                            <span class="text-slate-700">Tư duy phản biện</span>
+                        </div>
+                    </div>
+
+                    <!-- CTA Button -->
+                    <a href="{{ route('exams.list', ['type' => 'nangluc']) }}" class="block w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 text-center group/btn">
+                        <span class="inline-flex items-center gap-2">
+                            Bắt đầu làm bài
+                            <svg class="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </span>
                     </a>
                 </div>
+
+                <!-- Decorative elements -->
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/50 to-transparent rounded-full blur-2xl"></div>
+                <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-white/50 to-transparent rounded-full blur-2xl"></div>
             </div>
 
-            <!-- Tư duy -->
-            <div class="relative rounded-2xl overflow-hidden group">
-                <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 to-indigo-700 opacity-90 group-hover:opacity-95 transition-opacity"></div>
-                <img src="{{ asset('images/cognitive.jpg') }}" alt="Tư duy" class="w-full h-80 object-cover">
-                <div class="absolute inset-0 flex flex-col justify-center px-8 text-white">
-                    <h3 class="text-2xl font-bold mb-4">Đề thi Tư duy</h3>
-                    <p class="mb-6 text-indigo-100">Phát triển khả năng suy luận, phân tích và đưa ra quyết định.</p>
-                    <a href="{{ route('exams.list', ['type' => 'tuduy']) }}"
-                       class="inline-flex items-center px-6 py-3 border-2 border-white text-sm font-medium rounded-full text-white hover:bg-white hover:text-indigo-600 transition-colors w-fit">
-                        Xem chi tiết
-                        <svg class="ml-2 -mr-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
+            <!-- Tư Duy -->
+            <div class="exam-card group relative bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.02]">
+                <div class="absolute inset-0 bg-gradient-to-br from-purple-600 via-pink-500 to-rose-500 opacity-5 group-hover:opacity-10 transition-opacity"></div>
+                
+                <div class="relative p-8 md:p-10">
+                    <!-- Header -->
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="flex-1">
+                            <div class="inline-flex p-4 rounded-2xl bg-gradient-to-br from-purple-600 via-pink-500 to-rose-500 text-white mb-4 shadow-lg">
+                                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-3xl font-bold text-slate-800 mb-2">
+                                Tư Duy
+                            </h3>
+                            <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">
+                                Cognitive Test
+                            </p>
+                        </div>
+                    </div>
+
+                    <p class="text-lg text-slate-600 mb-8 leading-relaxed">
+                        Phát triển khả năng suy luận, phân tích và ra quyết định thông minh
+                    </p>
+
+                    <!-- Stats -->
+                    <div class="grid grid-cols-3 gap-4 mb-8">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-slate-800 mb-1">500+</div>
+                            <div class="text-xs text-slate-500">Câu hỏi</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-slate-800 mb-1">Nhiều dạng</div>
+                            <div class="text-xs text-slate-500">Bài thi</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-slate-800 mb-1">Đa dạng</div>
+                            <div class="text-xs text-slate-500">Mức độ</div>
+                        </div>
+                    </div>
+
+                    <!-- Features -->
+                    <div class="space-y-3 mb-8">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full bg-gradient-to-r from-purple-600 to-rose-500"></div>
+                            <span class="text-slate-700">Suy luận logic</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full bg-gradient-to-r from-purple-600 to-rose-500"></div>
+                            <span class="text-slate-700">Nhận thức mẫu hình</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full bg-gradient-to-r from-purple-600 to-rose-500"></div>
+                            <span class="text-slate-700">Tư duy sáng tạo</span>
+                        </div>
+                    </div>
+
+                    <!-- CTA Button -->
+                    <a href="{{ route('exams.list', ['type' => 'tuduy']) }}" class="block w-full py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 text-center group/btn">
+                        <span class="inline-flex items-center gap-2">
+                            Bắt đầu làm bài
+                            <svg class="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </span>
                     </a>
                 </div>
+
+                <!-- Decorative elements -->
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/50 to-transparent rounded-full blur-2xl"></div>
+                <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-white/50 to-transparent rounded-full blur-2xl"></div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- CTA Section -->
-<div class="bg-blue-700">
-    <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
-        <h2 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            <span class="block">Sẵn sàng để bắt đầu?</span>
-            <span class="block text-blue-200">Tạo tài khoản miễn phí ngay hôm nay.</span>
+<div class="py-24 relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600"></div>
+    <div class="absolute inset-0 bg-pattern opacity-20"></div>
+    
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">
+            Sẵn sàng thử thách bản thân?
         </h2>
-        <div class="mt-8 flex lg:mt-0 lg:flex-shrink-0">
-            <div class="inline-flex rounded-md shadow">
-                <a href="{{ route('register') }}"
-                   class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50">
-                    Đăng ký ngay
-                </a>
-            </div>
-            <div class="ml-3 inline-flex rounded-md shadow">
-                <a href="{{ route('exams.list') }}"
-                   class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                    Xem đề thi
-                </a>
-            </div>
+        <p class="text-xl text-blue-100 mb-12 max-w-2xl mx-auto">
+            Tham gia cùng hàng nghìn người dùng đang phát triển kỹ năng mỗi ngày
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{{ route('register') }}" class="px-8 py-4 bg-white text-blue-600 rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
+                Đăng ký miễn phí
+            </a>
+            <a href="{{ route('exams.list') }}" class="px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white rounded-2xl font-semibold text-lg hover:bg-white/20 transform hover:scale-105 transition-all duration-300">
+                Xem demo
+            </a>
         </div>
     </div>
 </div>
@@ -186,25 +406,135 @@
 
 @push('scripts')
 <script>
-$(document).ready(function() {
-    // Animations on scroll
-    function revealOnScroll() {
-        var reveals = document.querySelectorAll('.group');
-        
-        reveals.forEach((reveal) => {
-            var windowHeight = window.innerHeight;
-            var elementTop = reveal.getBoundingClientRect().top;
-            var elementVisible = 150;
+document.addEventListener('DOMContentLoaded', function() {
+    // Create floating elements
+    const floatingContainer = document.getElementById('floating-elements');
+    if (floatingContainer) {
+        for (let i = 0; i < 6; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'absolute animate-float';
+            dot.style.left = Math.random() * 100 + '%';
+            dot.style.top = Math.random() * 100 + '%';
+            dot.style.animationDelay = i * 0.5 + 's';
+            dot.style.animationDuration = (3 + Math.random() * 2) + 's';
             
-            if (elementTop < windowHeight - elementVisible) {
-                reveal.classList.add('opacity-100');
-                reveal.classList.remove('opacity-0');
+            const inner = document.createElement('div');
+            inner.className = 'w-2 h-2 bg-blue-400 rounded-full opacity-40';
+            dot.appendChild(inner);
+            floatingContainer.appendChild(dot);
+        }
+    }
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
             }
+        });
+    });
+
+    // Intersection Observer for animations
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    // Observe feature cards and exam cards
+    document.querySelectorAll('.feature-card, .exam-card').forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = 'all 0.6s ease-out';
+        observer.observe(card);
+    });
+
+    // Add stagger effect to cards
+    document.querySelectorAll('.feature-card').forEach((card, index) => {
+        card.style.transitionDelay = (index * 0.1) + 's';
+    });
+
+    document.querySelectorAll('.exam-card').forEach((card, index) => {
+        card.style.transitionDelay = (index * 0.2) + 's';
+    });
+
+    // Parallax effect on scroll
+    let scrollPos = 0;
+    window.addEventListener('scroll', () => {
+        scrollPos = window.pageYOffset;
+        
+        // Parallax for hero section
+        const hero = document.querySelector('.relative.min-h-screen');
+        if (hero && scrollPos < hero.offsetHeight) {
+            const parallaxElements = hero.querySelectorAll('.absolute.inset-0 > div');
+            parallaxElements.forEach((el, index) => {
+                const speed = 0.5 + (index * 0.1);
+                el.style.transform = `translateY(${scrollPos * speed}px)`;
+            });
+        }
+    });
+
+    // Add hover effect to hero button
+    const heroBtn = document.querySelector('.hero-btn');
+    if (heroBtn) {
+        heroBtn.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.05)';
+        });
+        heroBtn.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
         });
     }
 
-    window.addEventListener('scroll', revealOnScroll);
-    revealOnScroll();
+    // Counter animation for stats
+    const animateCounter = (element, target, duration = 2000) => {
+        const start = 0;
+        const increment = target / (duration / 16);
+        let current = start;
+        
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                element.textContent = target;
+                clearInterval(timer);
+            } else {
+                element.textContent = Math.floor(current);
+            }
+        }, 16);
+    };
+
+    // Trigger counter animation when stats come into view
+    const statsObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const statValue = entry.target.querySelector('.text-3xl');
+                const value = statValue.textContent.replace(/[^0-9]/g, '');
+                if (value && !entry.target.dataset.animated) {
+                    entry.target.dataset.animated = 'true';
+                    statValue.textContent = '0';
+                    setTimeout(() => {
+                        animateCounter(statValue, parseInt(value));
+                    }, 300);
+                }
+            }
+        });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('.bg-white\\/60.backdrop-blur-sm').forEach(stat => {
+        statsObserver.observe(stat);
+    });
 });
 </script>
 @endpush

@@ -49,12 +49,13 @@
                            class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('exams.*') ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }}">
                             Đề thi
                         </a>
-                        @auth
-                        <a href="{{ route('exam-history.index') }}"
-                           class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('exam-history.*') ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }}">
-                            Lịch sử thi
+                        <a href="{{ route('subscriptions.index') }}"
+                           class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('subscriptions.*') ? 'border-blue-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }}">
+                            <span class="flex items-center">
+                                Gói VIP
+                                <span class="ml-1 px-1.5 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">PRO</span>
+                            </span>
                         </a>
-                        @endauth
                     </div>
                 </div>
 
@@ -75,19 +76,46 @@
                             </div>
                             <div x-show="open" 
                                  @click.away="open = false"
-                                 class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100">
+                                 class="origin-top-right absolute right-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 z-50">
                                 <div class="py-1">
-                                    <a href="{{ route('profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        Tài khoản của tôi
+                                    <a href="{{ route('user.profile') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" @click.prevent="window.location='{{ route('user.profile') }}'; localStorage.setItem('userTab', 'info'); open=false">
+                                        <svg class="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                                        </svg>
+                                        Thông tin người dùng
                                     </a>
-                                    <a href="{{ route('exam-history.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        Lịch sử thi
+                                    <a href="{{ route('user.profile') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" @click.prevent="window.location='{{ route('user.profile') }}'; localStorage.setItem('userTab', 'attempts'); open=false">
+                                        <svg class="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" />
+                                        </svg>
+                                        Thông tin lượt thi
                                     </a>
+                                    <a href="{{ route('user.profile') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" @click.prevent="window.location='{{ route('user.profile') }}'; localStorage.setItem('userTab', 'stats'); open=false">
+                                        <svg class="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                                        </svg>
+                                        Thống kê kết quả
+                                    </a>
+                                    <a href="{{ route('user.profile') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" @click.prevent="window.location='{{ route('user.profile') }}'; localStorage.setItem('userTab', 'subscription'); open=false">
+                                        <svg class="mr-3 h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 00-1.414 0L10 10.586 8.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l6-6a1 1 0 000-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                        Gói đăng kí
+                                    </a>
+                                    <div class="flex items-center px-4 py-2 text-sm text-gray-700">
+                                        <svg class="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                                        </svg>
+                                        <span>Lượt thi còn lại: <span class="font-medium text-blue-600">{{ Auth::user()->free_slots ?? 'Không giới hạn' }}</span></span>
+                                    </div>
                                 </div>
                                 <div class="py-1">
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
-                                        <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <button type="submit" class="flex w-full items-center px-4 py-2 text-sm text-red-700 hover:bg-gray-100">
+                                            <svg class="mr-3 h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                                            </svg>
                                             Đăng xuất
                                         </button>
                                     </form>

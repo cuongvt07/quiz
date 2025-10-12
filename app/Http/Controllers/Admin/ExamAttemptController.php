@@ -31,7 +31,7 @@ class ExamAttemptController extends Controller
                         ->whereNotNull('score');
                 }], 'score')
                 ->orderBy('total_attempts', 'desc')
-                ->paginate(15);
+                ->paginate(10);
         });
 
         return view('admin.exam-attempts.by-exam', compact('exams'));
@@ -60,7 +60,7 @@ class ExamAttemptController extends Controller
                   ->latest()
                   ->limit(1);
             }])
-            ->paginate(15);
+            ->paginate(10);
 
         return view('admin.exam-attempts.exam-users', compact('exam', 'users'));
     }
@@ -78,7 +78,7 @@ class ExamAttemptController extends Controller
             ->where('used_free_slot', true)
             ->with('exam')
             ->orderByDesc('created_at')
-            ->paginate(15);
+            ->paginate(10);
 
         // Thống kê
         $stats = [

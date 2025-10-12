@@ -134,7 +134,7 @@ class ExamAttemptsTestSeeder extends Seeder
                     ExamAttempt::create([
                         'exam_id' => $exam->id,
                         'user_id' => $user->id,
-                        'started_at' => $now->copy()->subMinutes(15),
+                        'started_at' => $now->copy()->subMinutes(10),
                         'finished_at' => null,
                         'used_free_slot' => true
                     ]);

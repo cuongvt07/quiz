@@ -16,6 +16,12 @@ use App\Http\Controllers\Admin\QuestionBankController;
 // ==========================
 Route::get('/', [\App\Http\Controllers\Frontend\HomeController::class, 'index'])->name('home');
 
+// Gói nâng cấp (Frontend)
+Route::prefix('subscriptions')->name('subscriptions.')->group(function() {
+    Route::get('/', [\App\Http\Controllers\Frontend\SubscriptionController::class, 'index'])->name('index');
+    Route::get('/{plan}', [\App\Http\Controllers\Frontend\SubscriptionController::class, 'show'])->name('show');
+});
+
 Route::prefix('exam-list')->name('exams.')->group(function() {
     Route::get('/', [\App\Http\Controllers\Frontend\ExamController::class, 'index'])->name('list');
     Route::get('/type/{type}', [\App\Http\Controllers\Frontend\ExamController::class, 'index'])->name('list.type');
@@ -62,6 +68,11 @@ Route::middleware([
         Route::post('/{attempt}/save-answer', [\App\Http\Controllers\User\UserExamController::class, 'saveAnswer'])->name('save-answer');
         Route::post('/{attempt}/submit', [\App\Http\Controllers\User\UserExamController::class, 'submit'])->name('submit');
         Route::get('/{attempt}/result', [\App\Http\Controllers\User\UserExamController::class, 'result'])->name('result');
+    });
+
+    // Thông tin người dùng
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/user/profile', [\App\Http\Controllers\Frontend\UserProfileController::class, 'show'])->name('user.profile');
     });
 });
 

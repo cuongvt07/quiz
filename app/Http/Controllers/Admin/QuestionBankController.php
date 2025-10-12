@@ -13,7 +13,7 @@ class QuestionBankController extends Controller
     {
         $subjects = Subject::withCount('questions')
             ->orderBy('name')
-            ->paginate(15);
+            ->paginate(10);
 
         return view('admin.questions.subjects', compact('subjects'));
     }
@@ -50,7 +50,7 @@ class QuestionBankController extends Controller
             $query->where('is_active', $request->is_active);
         }
 
-        $questions = $query->orderByDesc('id')->paginate(15);
+        $questions = $query->orderByDesc('id')->paginate(10);
         $subjects = Subject::orderBy('name')->get();
         $questionTypes = Question::getDanhSachLoai();
 
