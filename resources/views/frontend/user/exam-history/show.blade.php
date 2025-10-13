@@ -32,7 +32,9 @@
                 <p class="text-sm text-gray-600 mb-2">Điểm số</p>
                 <p class="text-4xl font-bold text-blue-600">{{ $attempt->score }}</p>
                 <p class="text-sm text-gray-500 mt-1">/{{ $stats['total_questions'] }}</p>
-                <p class="text-xs text-gray-400 mt-2">{{ number_format(($attempt->score / $stats['total_questions']) * 100, 1) }}%</p>
+                <p class="text-xs text-gray-400 mt-2">
+                    {{ $stats['total_questions'] > 0 ? number_format(($attempt->score / $stats['total_questions']) * 100, 1) : '0.0' }}%
+                </p>
             </div>
             <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 text-center">
                 <i data-lucide="check-circle" class="w-8 h-8 mx-auto text-green-600 mb-2"></i>
@@ -52,7 +54,16 @@
             <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 text-center">
                 <i data-lucide="clock" class="w-8 h-8 mx-auto text-purple-600 mb-2"></i>
                 <p class="text-sm text-gray-600 mb-1">Thời gian</p>
-                <p class="text-2xl font-bold text-purple-600">{{ $attempt->duration_minutes ?? 0 }}</p>
+                @if($attempt->finished_at)
+                    @php
+                        $duration = round((strtotime($attempt->finished_at) - strtotime($attempt->started_at)) / 60, 1);
+                    @endphp
+                    <p class="text-2xl font-bold text-purple-600">
+                        {{ $duration >= 0 ? $duration : '-' }}
+                    </p>
+                @else
+                    <p class="text-2xl font-bold text-purple-600">-</p>
+                @endif
                 <p class="text-xs text-gray-400 mt-1">phút</p>
             </div>
         </div>
@@ -91,7 +102,12 @@
                                 {{ $index + 1 }}
                             </div>
                             <div class="flex-1">
-                                <p class="text-gray-800 mb-2">{{ $result['question']->question }}</p>
+                                <p class="text-gray-800 mb-2">
+                                    {{ $result['question']->question }}
+                                    @if(!$result['user_answer'])
+                                        <span class="ml-2 px-2 py-0.5 rounded bg-gray-200 text-gray-600 text-xs font-medium">Chưa trả lời</span>
+                                    @endif
+                                </p>
                                 
                                 {{-- Answers Summary --}}
                                 <div class="flex flex-wrap gap-3 text-sm">

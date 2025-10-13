@@ -22,7 +22,42 @@
             </a>
         </div>
 
-        @if($attempts->isEmpty())
+        @if(request()->has('exam_id'))
+            <div class="bg-white shadow-sm rounded-lg">
+                <ul class="divide-y divide-gray-200">
+                    @foreach($attempts as $attempt)
+                        <li class="p-4 hover:bg-gray-50 transition">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="font-semibold text-blue-600">Lượt {{ $loop->iteration }}</span>
+                                    <span class="ml-4 text-xs text-gray-500">{{ \Carbon\Carbon::parse($attempt->created_at)->format('d/m/Y H:i') }}</span>
+                                </div>
+                                <div class="flex items-center gap-6">
+                                    @if($attempt->finished_at)
+                                        <span class="text-sm text-gray-700">
+                                            Thời gian làm bài: 
+                                            <span class="font-semibold">
+                                                {{ \Carbon\Carbon::parse($attempt->finished_at)->diffInMinutes(\Carbon\Carbon::parse($attempt->started_at)) }} phút
+                                            </span>
+                                        </span>
+                                    @else
+                                        <span class="text-sm text-red-500">Chưa nộp bài</span>
+                                    @endif
+                                    <span class="text-sm text-gray-700">Đúng: <span class="font-semibold">{{ $attempt->correct_answers }}/{{ $attempt->exam->total_questions }}</span></span>
+                                    <span class="text-sm text-blue-600 font-bold">{{ $attempt->correct_answers }} điểm</span>
+                                    <a href="{{ route('exam-history.show', $attempt) }}" class="ml-4 inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                        Xem chi tiết
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                    @endforeach
+                </ul>
+                <div class="px-4 py-3 border-t border-gray-200">
+                    {{ $attempts->links() }}
+                </div>
+            </div>
+        @elseif($attempts->isEmpty())
             <div class="bg-white shadow-sm rounded-lg p-6 text-center">
                 <div class="flex flex-col items-center">
                     <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
