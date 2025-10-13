@@ -112,6 +112,352 @@
     </div>
 </div>
 
+<!-- Rankings Section -->
+<div class="py-24 relative bg-gradient-to-b from-slate-50 to-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-bold text-slate-800 mb-4">
+                Bảng Vinh Danh
+            </h2>
+            <p class="text-xl text-slate-600 max-w-2xl mx-auto">
+                Những thành tích xuất sắc trong cộng đồng
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Top Attempts (Highest Scores) -->
+            <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
+                <div class="p-6 bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500">
+                    <div class="flex flex-col gap-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-2xl font-bold text-white">Thí Sinh Xuất Sắc</h3>
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                            </svg>
+                        </div>
+                        
+                        <!-- Filters -->
+                        <form class="grid grid-cols-2 gap-2">
+                            <div class="relative">
+                                <select name="exam_id" class="w-full pl-3 pr-10 py-2 text-sm bg-white/20 backdrop-blur-sm text-white rounded-lg border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50">
+                                    <option value="">Tất cả đề thi</option>
+                                    @foreach($exams as $exam)
+                                        <option value="{{ $exam->id }}" {{ $selectedExam == $exam->id ? 'selected' : '' }}>
+                                            {{ $exam->title }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="relative">
+                                <select name="month" class="w-full pl-3 pr-10 py-2 text-sm bg-white/20 backdrop-blur-sm text-white rounded-lg border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50">
+                                    @foreach($months as $key => $month)
+                                        <option value="{{ $key }}" {{ $selectedMonth == $key ? 'selected' : '' }}>
+                                            Tháng {{ $key }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <button type="submit" class="col-span-2 py-2 px-4 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white text-sm rounded-lg border border-white/30 transition-colors">
+                                Lọc kết quả
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="p-6 pb-12">
+                    @if($topAttempts->isEmpty())
+                        <div class="text-center text-gray-500 py-12">
+                            Chưa có dữ liệu cho thời gian này
+                        </div>
+                    @else
+                        <div class="relative min-h-[380px] flex items-end justify-center">
+                            <!-- Podium Platform Background -->
+                            <div class="absolute bottom-0 left-0 right-0 flex items-end justify-center gap-2 px-4">
+                                @if(isset($topAttempts[1]))
+                                <div class="w-1/3 h-24 bg-gradient-to-t from-yellow-300 via-yellow-200 to-yellow-100 rounded-t-2xl border-t-4 border-yellow-400 shadow-lg"></div>
+                                @endif
+                                @if(isset($topAttempts[0]))
+                                <div class="w-1/3 h-32 bg-gradient-to-t from-yellow-600 via-yellow-500 to-orange-400 rounded-t-2xl border-t-4 border-yellow-700 shadow-xl"></div>
+                                @endif
+                                @if(isset($topAttempts[2]))
+                                <div class="w-1/3 h-20 bg-gradient-to-t from-orange-400 via-orange-300 to-orange-200 rounded-t-2xl border-t-4 border-orange-500 shadow-lg"></div>
+                                @endif
+                            </div>
+                            
+                            <!-- Winners on Podium -->
+                            <div class="relative w-full flex items-end justify-center gap-2 px-4 pb-2">
+                                <!-- Top 2 (Left) -->
+                                @if(isset($topAttempts[1]))
+                                <div class="w-1/3 flex flex-col items-center mb-24 transform transition-all duration-300 hover:scale-105 hover:-translate-y-2">
+                                    <div class="relative mb-3">
+                                        <div class="w-20 h-20 bg-gradient-to-br from-yellow-200 to-yellow-400 rounded-full flex items-center justify-center border-4 border-white shadow-xl">
+                                            <span class="text-2xl font-bold text-yellow-700">2</span>
+                                        </div>
+                                        <div class="absolute -top-2 -right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg">
+                                            <span class="text-2xl">🥈</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <h4 class="font-bold text-gray-800 text-sm mb-1">{{ Str::limit($topAttempts[1]->user->name, 12) }}</h4>
+                                        <p class="text-xl font-extrabold text-yellow-600 mb-0.5">{{ $topAttempts[1]->score }}</p>
+                                        <p class="text-xs text-gray-500">điểm</p>
+                                    </div>
+                                </div>
+                                @endif
+
+                                <!-- Top 1 (Center) -->
+                                @if(isset($topAttempts[0]))
+                                <div class="w-1/3 flex flex-col items-center mb-32 transform transition-all duration-300 hover:scale-110 hover:-translate-y-3">
+                                    <div class="relative mb-4">
+                                        <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+                                            <span class="text-4xl drop-shadow-lg">👑</span>
+                                        </div>
+                                        <div class="w-24 h-24 bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500 rounded-full flex items-center justify-center border-4 border-white shadow-2xl relative">
+                                            <span class="text-3xl font-extrabold text-white">1</span>
+                                            <div class="absolute -top-1 -left-1 w-3 h-3 bg-white rounded-full animate-ping"></div>
+                                            <div class="absolute -bottom-1 -right-1 w-2 h-2 bg-white rounded-full animate-ping" style="animation-delay: 0.5s"></div>
+                                        </div>
+                                        <div class="absolute -top-2 -right-2 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl">
+                                            <span class="text-3xl">🏆</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <h4 class="font-extrabold text-gray-900 text-base mb-1">{{ Str::limit($topAttempts[0]->user->name, 12) }}</h4>
+                                        <p class="text-2xl font-black text-transparent bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text mb-1">{{ $topAttempts[0]->score }}</p>
+                                        <p class="text-xs text-gray-600 font-semibold">điểm</p>
+                                    </div>
+                                </div>
+                                @endif
+
+                                <!-- Top 3 (Right) -->
+                                @if(isset($topAttempts[2]))
+                                <div class="w-1/3 flex flex-col items-center mb-20 transform transition-all duration-300 hover:scale-105 hover:-translate-y-2">
+                                    <div class="relative mb-3">
+                                        <div class="w-20 h-20 bg-gradient-to-br from-orange-200 to-orange-400 rounded-full flex items-center justify-center border-4 border-white shadow-xl">
+                                            <span class="text-2xl font-bold text-orange-700">3</span>
+                                        </div>
+                                        <div class="absolute -top-2 -right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg">
+                                            <span class="text-2xl">🥉</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <h4 class="font-bold text-gray-800 text-sm mb-1">{{ Str::limit($topAttempts[2]->user->name, 12) }}</h4>
+                                        <p class="text-xl font-extrabold text-orange-600 mb-0.5">{{ $topAttempts[2]->score }}</p>
+                                        <p class="text-xs text-gray-500">điểm</p>
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Top Users (Most Exam Attempts) -->
+            <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
+                <div class="p-6 bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-500 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-2xl font-bold">Người Thi Nhiều Nhất</h3>
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                    </div>
+                    <p class="text-blue-100">Top 3 người dùng tham gia nhiều kỳ thi nhất</p>
+                </div>
+                
+                <div class="p-6 pb-12">
+                    @if($topUsers->isEmpty())
+                        <div class="text-center text-gray-500 py-12">
+                            Chưa có dữ liệu
+                        </div>
+                    @else
+                        <div class="relative min-h-[380px] flex items-end justify-center">
+                            <!-- Podium Platform Background -->
+                            <div class="absolute bottom-0 left-0 right-0 flex items-end justify-center gap-2 px-4">
+                                @if(isset($topUsers[1]))
+                                <div class="w-1/3 h-24 bg-gradient-to-t from-blue-300 via-blue-200 to-blue-100 rounded-t-2xl border-t-4 border-blue-400 shadow-lg"></div>
+                                @endif
+                                @if(isset($topUsers[0]))
+                                <div class="w-1/3 h-32 bg-gradient-to-t from-blue-600 via-blue-500 to-indigo-400 rounded-t-2xl border-t-4 border-blue-700 shadow-xl"></div>
+                                @endif
+                                @if(isset($topUsers[2]))
+                                <div class="w-1/3 h-20 bg-gradient-to-t from-indigo-400 via-indigo-300 to-indigo-200 rounded-t-2xl border-t-4 border-indigo-500 shadow-lg"></div>
+                                @endif
+                            </div>
+                            
+                            <!-- Winners on Podium -->
+                            <div class="relative w-full flex items-end justify-center gap-2 px-4 pb-2">
+                                <!-- Top 2 (Left) -->
+                                @if(isset($topUsers[1]))
+                                <div class="w-1/3 flex flex-col items-center mb-24 transform transition-all duration-300 hover:scale-105 hover:-translate-y-2">
+                                    <div class="relative mb-3">
+                                        <div class="w-20 h-20 bg-gradient-to-br from-blue-200 to-blue-400 rounded-full flex items-center justify-center border-4 border-white shadow-xl">
+                                            <span class="text-2xl font-bold text-blue-700">2</span>
+                                        </div>
+                                        <div class="absolute -top-2 -right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg">
+                                            <span class="text-2xl">🥈</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <h4 class="font-bold text-gray-800 text-sm mb-1">{{ Str::limit($topUsers[1]->name, 12) }}</h4>
+                                        <p class="text-xl font-extrabold text-blue-600 mb-0.5">{{ $topUsers[1]->exam_attempts_count }}</p>
+                                        <p class="text-xs text-gray-500">lượt thi</p>
+                                    </div>
+                                </div>
+                                @endif
+
+                                <!-- Top 1 (Center) -->
+                                @if(isset($topUsers[0]))
+                                <div class="w-1/3 flex flex-col items-center mb-32 transform transition-all duration-300 hover:scale-110 hover:-translate-y-3">
+                                    <div class="relative mb-4">
+                                        <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+                                            <span class="text-4xl drop-shadow-lg">👑</span>
+                                        </div>
+                                        <div class="w-24 h-24 bg-gradient-to-br from-blue-400 via-blue-500 to-indigo-500 rounded-full flex items-center justify-center border-4 border-white shadow-2xl relative">
+                                            <span class="text-3xl font-extrabold text-white">1</span>
+                                            <div class="absolute -top-1 -left-1 w-3 h-3 bg-white rounded-full animate-ping"></div>
+                                            <div class="absolute -bottom-1 -right-1 w-2 h-2 bg-white rounded-full animate-ping" style="animation-delay: 0.5s"></div>
+                                        </div>
+                                        <div class="absolute -top-2 -right-2 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl">
+                                            <span class="text-3xl">🏆</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <h4 class="font-extrabold text-gray-900 text-base mb-1">{{ Str::limit($topUsers[0]->name, 12) }}</h4>
+                                        <p class="text-2xl font-black text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text mb-1">{{ $topUsers[0]->exam_attempts_count }}</p>
+                                        <p class="text-xs text-gray-600 font-semibold">lượt thi</p>
+                                    </div>
+                                </div>
+                                @endif
+
+                                <!-- Top 3 (Right) -->
+                                @if(isset($topUsers[2]))
+                                <div class="w-1/3 flex flex-col items-center mb-20 transform transition-all duration-300 hover:scale-105 hover:-translate-y-2">
+                                    <div class="relative mb-3">
+                                        <div class="w-20 h-20 bg-gradient-to-br from-indigo-200 to-indigo-400 rounded-full flex items-center justify-center border-4 border-white shadow-xl">
+                                            <span class="text-2xl font-bold text-indigo-700">3</span>
+                                        </div>
+                                        <div class="absolute -top-2 -right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg">
+                                            <span class="text-2xl">🥉</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <h4 class="font-bold text-gray-800 text-sm mb-1">{{ Str::limit($topUsers[2]->name, 12) }}</h4>
+                                        <p class="text-xl font-extrabold text-indigo-600 mb-0.5">{{ $topUsers[2]->exam_attempts_count }}</p>
+                                        <p class="text-xs text-gray-500">lượt thi</p>
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Top Subscribers -->
+            <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
+                <div class="p-6 bg-gradient-to-r from-purple-400 via-purple-500 to-pink-500 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-2xl font-bold">Người Dùng VIP</h3>
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <p class="text-purple-100">Top 3 người dùng mua gói nhiều nhất</p>
+                </div>
+                
+                <div class="p-6 pb-12">
+                    @if($topSubscribers->isEmpty())
+                        <div class="text-center text-gray-500 py-12">
+                            Chưa có dữ liệu
+                        </div>
+                    @else
+                        <div class="relative min-h-[380px] flex items-end justify-center">
+                            <!-- Podium Platform Background -->
+                            <div class="absolute bottom-0 left-0 right-0 flex items-end justify-center gap-2 px-4">
+                                @if(isset($topSubscribers[1]))
+                                <div class="w-1/3 h-24 bg-gradient-to-t from-purple-300 via-purple-200 to-purple-100 rounded-t-2xl border-t-4 border-purple-400 shadow-lg"></div>
+                                @endif
+                                @if(isset($topSubscribers[0]))
+                                <div class="w-1/3 h-32 bg-gradient-to-t from-purple-600 via-purple-500 to-pink-400 rounded-t-2xl border-t-4 border-purple-700 shadow-xl"></div>
+                                @endif
+                                @if(isset($topSubscribers[2]))
+                                <div class="w-1/3 h-20 bg-gradient-to-t from-pink-400 via-pink-300 to-pink-200 rounded-t-2xl border-t-4 border-pink-500 shadow-lg"></div>
+                                @endif
+                            </div>
+                            
+                            <!-- Winners on Podium -->
+                            <div class="relative w-full flex items-end justify-center gap-2 px-4 pb-2">
+                                <!-- Top 2 (Left) -->
+                                @if(isset($topSubscribers[1]))
+                                <div class="w-1/3 flex flex-col items-center mb-24 transform transition-all duration-300 hover:scale-105 hover:-translate-y-2">
+                                    <div class="relative mb-3">
+                                        <div class="w-20 h-20 bg-gradient-to-br from-purple-200 to-purple-400 rounded-full flex items-center justify-center border-4 border-white shadow-xl">
+                                            <span class="text-2xl font-bold text-purple-700">2</span>
+                                        </div>
+                                        <div class="absolute -top-2 -right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg">
+                                            <span class="text-2xl">🥈</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <h4 class="font-bold text-gray-800 text-sm mb-1">{{ Str::limit($topSubscribers[1]->name, 12) }}</h4>
+                                        <p class="text-xl font-extrabold text-purple-600 mb-0.5">{{ $topSubscribers[1]->user_subscriptions_count }}</p>
+                                        <p class="text-xs text-gray-500">gói đã mua</p>
+                                    </div>
+                                </div>
+                                @endif
+
+                                <!-- Top 1 (Center) -->
+                                @if(isset($topSubscribers[0]))
+                                <div class="w-1/3 flex flex-col items-center mb-32 transform transition-all duration-300 hover:scale-110 hover:-translate-y-3">
+                                    <div class="relative mb-4">
+                                        <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+                                            <span class="text-4xl drop-shadow-lg">👑</span>
+                                        </div>
+                                        <div class="w-24 h-24 bg-gradient-to-br from-purple-400 via-purple-500 to-pink-500 rounded-full flex items-center justify-center border-4 border-white shadow-2xl relative">
+                                            <span class="text-3xl font-extrabold text-white">1</span>
+                                            <div class="absolute -top-1 -left-1 w-3 h-3 bg-white rounded-full animate-ping"></div>
+                                            <div class="absolute -bottom-1 -right-1 w-2 h-2 bg-white rounded-full animate-ping" style="animation-delay: 0.5s"></div>
+                                        </div>
+                                        <div class="absolute -top-2 -right-2 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl">
+                                            <span class="text-3xl">💎</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <h4 class="font-extrabold text-gray-900 text-base mb-1">{{ Str::limit($topSubscribers[0]->name, 12) }}</h4>
+                                        <p class="text-2xl font-black text-transparent bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text mb-1">{{ $topSubscribers[0]->user_subscriptions_count }}</p>
+                                        <p class="text-xs text-gray-600 font-semibold">gói đã mua</p>
+                                    </div>
+                                </div>
+                                @endif
+
+                                <!-- Top 3 (Right) -->
+                                @if(isset($topSubscribers[2]))
+                                <div class="w-1/3 flex flex-col items-center mb-20 transform transition-all duration-300 hover:scale-105 hover:-translate-y-2">
+                                    <div class="relative mb-3">
+                                        <div class="w-20 h-20 bg-gradient-to-br from-pink-200 to-pink-400 rounded-full flex items-center justify-center border-4 border-white shadow-xl">
+                                            <span class="text-2xl font-bold text-pink-700">3</span>
+                                        </div>
+                                        <div class="absolute -top-2 -right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg">
+                                            <span class="text-2xl">🥉</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <h4 class="font-bold text-gray-800 text-sm mb-1">{{ Str::limit($topSubscribers[2]->name, 12) }}</h4>
+                                        <p class="text-xl font-extrabold text-purple-600 mb-0.5">{{ $topSubscribers[2]->user_subscriptions_count }}</p>
+                                        <p class="text-xs text-gray-500">gói đã mua</p>
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Features Section -->
 <div id="features" class="py-24 relative bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
