@@ -5,8 +5,21 @@
 @section('content')
 <div class="py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between mb-6">
-            <h1 class="text-2xl font-bold text-gray-900">Lịch sử thi</h1>
+        {{-- Header --}}
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-3xl font-semibold text-gray-800 flex items-center gap-3">
+                    <i data-lucide="history" class="text-blue-600 w-7 h-7"></i>
+                    <span>Lịch sử thi</span>
+                </h1>
+                @if(request()->has('exam_id'))
+                    <p class="text-gray-600 mt-2">{{ $attempts->first()->exam->title ?? '' }}</p>
+                @endif
+            </div>
+            <a href="/user/profile#attempts" 
+               class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:text-blue-600 hover:border-blue-400 transition">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> Quay lại hồ sơ
+            </a>
         </div>
 
         @if($attempts->isEmpty())

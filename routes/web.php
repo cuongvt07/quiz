@@ -52,7 +52,7 @@ Route::middleware([
     Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::delete('/profile', [\App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
-
+    Route::put('/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password');
     // Lịch sử thi
     Route::prefix('exam-history')->name('exam-history.')->group(function () {
         Route::get('/', [\App\Http\Controllers\User\ExamHistoryController::class, 'index'])->name('index');

@@ -210,10 +210,12 @@
                                                 : $revenueStats['today']['subscriptions'];
                                         @endphp
 
-                                        +{{ !empty($subs) ? number_format($subs[0]['price'], 0, ',', '.') . ' ₫' : '0 ₫' }}
-                                    </span>
+@if(!empty($subs) && isset($subs[0]['price']))
+    +{{ number_format($subs[0]['price'], 0, ',', '.') . ' ₫' }}
+@endif
+</span>
                                 </div>
-                                <div class="text-2xl font-bold text-black">{{ !empty($subs) ? number_format($subs[0]['price'], 0, ',', '.') . ' ₫' : '0 ₫' }}</div>
+                                <div class="text-2xl font-bold text-black">{{ !empty($subs) && isset($subs[0]['price']) ? number_format($subs[0]['price'], 0, ',', '.') . ' ₫' : '0 ₫' }}</div>
                                 <div class="mt-2 text-xs text-gray-500">Gói đăng ký mới hôm nay</div>
                             </div>
                         </div>
