@@ -30,6 +30,7 @@ class CreateNewUser implements CreatesNewUsers
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => Hash::make($input['password']),
+            'free_slots' => 2, // Mỗi user mới có 2 lượt thi miễn phí
         ]);
     }
 }

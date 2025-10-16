@@ -1,4 +1,135 @@
-@extends('layouts.app')
+@extends('layouts.frontend')
+
+@section('title', 'Kết quả bài thi')
+
+@section('content')
+<div class="min-h-screen bg-gray-50 py-12">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Kết quả bài thi -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <!-- Header -->
+            <div class="px-6 py-4 bg-blue-50 border-b border-blue-100">
+                <h1 class="text-xl font-bold text-blue-900">
+                    {{ $attempt->exam->title }}
+                </h1>
+                <p class="text-sm text-blue-600 mt-1">
+                    {{ $attempt->exam->subject->name }} - {{ $attempt->exam->subject->type == 'nang_luc' ? 'Năng lực' : 'Tư duy' }}
+                </p>
+            </div>
+
+            <!-- Thông tin chi tiết -->
+            <div class="p-6">
+                <!-- Score Circle -->
+                <div class="flex justify-center mb-8">
+                    <div class="relative">
+                        <svg class="w-32 h-32">
+                            <circle
+                                class="text-gray-200"
+                                stroke-width="10"
+                                stroke="currentColor"
+                                fill="transparent"
+                                r="56"
+                                cx="64"
+                                cy="64"
+                            />
+                            <circle
+                                class="text-blue-600"
+                                stroke-width="10"
+                                stroke="currentColor"
+                                fill="transparent"
+                                r="56"
+                                cx="64"
+                                cy="64"
+                                style="stroke-dasharray: {{ 2 * pi() * 56 }}; stroke-dashoffset: {{ 2 * pi() * 56 * (1 - ($attempt->correct_count / $attempt->exam->total_questions)) }};"
+                            />
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="text-center">
+                                <span class="text-2xl font-bold text-blue-600">
+                                    {{ $attempt->correct_count }}
+                                </span>
+                                <span class="text-sm text-gray-600">/{{ $attempt->exam->total_questions }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Grid -->
+                <div class="grid grid-cols-2 gap-6 mb-8">
+                    <!-- Số câu đúng -->
+                    <div class="text-center p-4 bg-green-50 rounded-lg">
+                        <span class="text-2xl font-bold text-green-600">{{ $attempt->correct_count }}</span>
+                        <p class="text-sm text-green-700 mt-1">Câu đúng</p>
+                    </div>
+
+                    <!-- Số câu sai -->
+                    <div class="text-center p-4 bg-red-50 rounded-lg">
+                        <span class="text-2xl font-bold text-red-600">{{ $attempt->wrong_count }}</span>
+                        <p class="text-sm text-red-700 mt-1">Câu sai</p>
+                    </div>
+                </div>
+
+                <!-- Thời gian làm bài -->
+                <div class="space-y-3 text-sm text-gray-600 mb-8">
+                    <div class="flex justify-between items-center">
+                        <span>Thời gian bắt đầu:</span>
+                        <span class="font-medium">{{ \Carbon\Carbon::parse($attempt->started_at)->format('H:i:s - d/m/Y') }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Thời gian kết thúc:</span>
+                        <span class="font-medium">{{ \Carbon\Carbon::parse($attempt->finished_at)->format('H:i:s - d/m/Y') }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Tổng thời gian làm bài:</span>
+                        <span class="font-medium">{{ $attempt->duration_in_minutes }} phút</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Loại lượt thi:</span>
+                        <span class="font-medium {{ $attempt->used_free_slot ? 'text-green-600' : 'text-blue-600' }}">
+                            {{ $attempt->used_free_slot ? 'Lượt miễn phí' : 'Lượt trả phí' }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-center space-x-4">
+                    <a href="{{ route('exam-history.show', $attempt) }}" 
+                       class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Xem chi tiết bài làm
+                        <svg class="ml-2 -mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </a>
+                    <a href="{{ route('exams.list') }}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Quay lại danh sách
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        @if($attempt->used_free_slot && $attempt->user->free_attempts_left <= 0)
+            <!-- Promotion Card -->
+            <div class="mt-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+                <h2 class="text-lg font-semibold mb-2">Bạn đã hết lượt thi miễn phí!</h2>
+                <p class="mb-4">Nâng cấp tài khoản ngay để:</p>
+                <ul class="list-disc list-inside mb-6 space-y-1">
+                    <li>Không giới hạn số lần làm đề thi</li>
+                    <li>Xem đáp án chi tiết và giải thích</li>
+                    <li>Truy cập tất cả các đề thi premium</li>
+                </ul>
+                <a href="{{ route('subscriptions.index') }}" 
+                   class="inline-flex items-center px-4 py-2 border-2 border-white rounded-lg text-sm font-medium hover:bg-white hover:text-blue-600 transition-colors">
+                    Xem các gói nâng cấp
+                    <svg class="ml-2 -mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                </a>
+            </div>
+        @endif
+    </div>
+</div>
+@endsection
 
 @section('content')
 <div class="space-y-6">

@@ -3,6 +3,22 @@
 @section('content')
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="container mx-auto px-4">
+        {{-- ⚠️ Cảnh báo reload --}}
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700">
+                        <strong>Lưu ý quan trọng:</strong> Không được reload (F5) hoặc rời khỏi trang khi đang làm bài. Nếu reload, bài thi sẽ tự động được nộp với 0 điểm!
+                    </p>
+                </div>
+            </div>
+        </div>
+
         <form id="exam-form" action="{{ route('user.exams.submit', $attempt) }}" method="POST">
             @csrf
             <div class="flex gap-6">
@@ -33,15 +49,14 @@
                                         <div class="rounded-lg border border-gray-200">
                                             <input type="text" 
                                                 name="answers[{{ $question->id }}]" 
-                                                class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                                                 placeholder="Nhập câu trả lời của bạn"
                                                 data-question="{{ $index + 1 }}"
                                                 data-question-id="{{ $question->id }}"
-                                                value="{{ $attempt->answers->where('question_id', $question->id)->first()?->answer ?? '' }}"
-                                                oninput="saveAnswer({{ $question->id }}, this.value, true)">
+                                                oninput="updateQuestionStatus({{ $index + 1 }}, {{ $question->id }})">
                                         </div>
                                     @else
-                                        {{-- Câu chọn --}}
+                                        {{-- Câu trắc nghiệm --}}
                                         @foreach($question->questionChoices as $choice)
                                             <label class="flex items-center p-4 rounded-lg border border-gray-200 hover:border-blue-400 cursor-pointer transition-all group">
                                                 <input type="radio" 
@@ -50,8 +65,7 @@
                                                     class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                                                     data-question="{{ $index + 1 }}"
                                                     data-question-id="{{ $question->id }}"
-                                                    {{ $attempt->answers->where('question_id', $question->id)->where('choice_id', $choice->id)->count() ? 'checked' : '' }}
-                                                    onchange="saveAnswer({{ $question->id }}, {{ $choice->id }}, false)">
+                                                    onchange="updateQuestionStatus({{ $index + 1 }}, {{ $question->id }})">
                                                 <div class="ml-4 flex items-center justify-between flex-1">
                                                     <span class="font-medium text-gray-700 group-hover:text-blue-600">
                                                         {{ chr(65 + $loop->index) }}. {{ $choice->name }}
@@ -92,11 +106,11 @@
                         <div class="border-b border-gray-200 pb-4 mb-4">
                             <div class="text-center">
                                 <p class="text-sm text-gray-600 mb-1">Thời gian còn lại</p>
-                                    <div class="text-3xl font-bold text-blue-600" 
-                                        x-data="timer('{{ $endAt }}')" 
-                                        x-init="startTimer">
-                                        <span x-text="String(minutes).padStart(2, '0')">00</span>:<span x-text="String(seconds).padStart(2, '0')">00</span>
-                                    </div>
+                                <div class="text-3xl font-bold text-blue-600" 
+                                    x-data="timer('{{ $endAt }}')" 
+                                    x-init="startTimer">
+                                    <span x-text="String(minutes).padStart(2, '0')">00</span>:<span x-text="String(seconds).padStart(2, '0')">00</span>
+                                </div>
                             </div>
                         </div>
 
@@ -106,8 +120,7 @@
                             <div class="grid grid-cols-5 gap-2">
                                 @foreach($attempt->exam->questions as $index => $question)
                                     <a href="#question-{{ $index + 1 }}"
-                                        class="question-number w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition
-                                               {{ $attempt->answers->where('question_id', $question->id)->count() ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}"
+                                        class="question-number bg-gray-100 text-gray-600 hover:bg-gray-200 w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition"
                                         data-question="{{ $index + 1 }}">
                                         {{ $index + 1 }}
                                     </a>
@@ -131,45 +144,16 @@
 @push('scripts')
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-// ================== INIT ON PAGE LOAD ==================
-document.addEventListener('DOMContentLoaded', function() {
-    updateAllQuestionColors();
-});
+// ================== PREVENT RELOAD/BACK ==================
+let isSubmitting = false;
 
-function updateAllQuestionColors() {
-    const allInputs = document.querySelectorAll('input[data-question-id]');
-    const processedQuestions = new Set();
-    
-    allInputs.forEach(input => {
-        const questionId = input.dataset.questionId;
-        const questionNumber = input.dataset.question;
-        
-        if (processedQuestions.has(questionNumber)) {
-            return;
-        }
-        processedQuestions.add(questionNumber);
-        
-        const questionButton = document.querySelector(`.question-number[data-question="${questionNumber}"]`);
-        if (!questionButton) return;
-        
-        let isAnswered = false;
-        
-        if (input.type === 'text') {
-            isAnswered = input.value.trim() !== '';
-        } else if (input.type === 'radio') {
-            const radioInputs = document.querySelectorAll(`input[type="radio"][data-question-id="${questionId}"]`);
-            isAnswered = Array.from(radioInputs).some(radio => radio.checked);
-        }
-        
-        if (isAnswered) {
-            questionButton.classList.remove('bg-gray-100', 'text-gray-600');
-            questionButton.classList.add('bg-blue-500', 'text-white');
-        } else {
-            questionButton.classList.remove('bg-blue-500', 'text-white');
-            questionButton.classList.add('bg-gray-100', 'text-gray-600');
-        }
-    });
-}
+window.addEventListener('beforeunload', function (e) {
+    if (!isSubmitting) {
+        e.preventDefault();
+        e.returnValue = 'Bạn có chắc muốn rời khỏi trang? Bài thi sẽ bị nộp tự động!';
+        return e.returnValue;
+    }
+});
 
 // ================== TIMER ==================
 function timer(endAtIso) {
@@ -190,7 +174,7 @@ function timer(endAtIso) {
                     this.minutes = 0;
                     this.seconds = 0;
                     this.isRunning = false;
-                    confirmSubmit(true);
+                    autoSubmitExam();
                     return;
                 }
 
@@ -207,19 +191,17 @@ function timer(endAtIso) {
     };
 }
 
-// ================== UPDATE QUESTION COLOR ==================
-function updateQuestionColor(questionId, questionNumber) {
+// ================== UPDATE QUESTION STATUS ==================
+function updateQuestionStatus(questionNumber, questionId) {
     const questionButton = document.querySelector(`.question-number[data-question="${questionNumber}"]`);
     if (!questionButton) return;
     
-    const input = document.querySelector(`input[data-question-id="${questionId}"]`);
-    if (!input) return;
-    
     let isAnswered = false;
     
-    if (input.type === 'text') {
-        isAnswered = input.value.trim() !== '';
-    } else if (input.type === 'radio') {
+    const textInput = document.querySelector(`input[type="text"][data-question-id="${questionId}"]`);
+    if (textInput) {
+        isAnswered = textInput.value.trim() !== '';
+    } else {
         const radioInputs = document.querySelectorAll(`input[type="radio"][data-question-id="${questionId}"]`);
         isAnswered = Array.from(radioInputs).some(radio => radio.checked);
     }
@@ -231,51 +213,6 @@ function updateQuestionColor(questionId, questionNumber) {
         questionButton.classList.remove('bg-blue-500', 'text-white');
         questionButton.classList.add('bg-gray-100', 'text-gray-600');
     }
-}
-
-// ================== SAVE ANSWER ==================
-function saveAnswer(questionId, value, isTextAnswer = false) {
-    // Cập nhật màu ngay lập tức (optimistic update)
-    const input = document.querySelector(`input[data-question-id="${questionId}"]`);
-    if (input) {
-        const questionNumber = input.dataset.question;
-        updateQuestionColor(questionId, questionNumber);
-    }
-    
-    let data = {
-        question_id: questionId
-    };
-
-    if (isTextAnswer) {
-        data.answer_text = value;
-    } else {
-        data.choice_id = value;
-    }
-
-    fetch('{{ route("user.exams.save-answer", $attempt) }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => {
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new TypeError("Server didn't return JSON response");
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (!data.success) {
-            console.error('Failed to save answer:', data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error saving answer:', error);
-    });
 }
 
 // ================== COUNT ANSWERED QUESTIONS ==================
@@ -298,22 +235,9 @@ function countAnsweredQuestions() {
 }
 
 // ================== CONFIRM SUBMIT ==================
-function confirmSubmit(isTimeout = false) {
+function confirmSubmit() {
     const totalQuestions = @json($attempt->exam->total_questions);
     const answeredQuestions = countAnsweredQuestions();
-
-    if (isTimeout) {
-        Swal.fire({
-            title: 'Hết thời gian làm bài',
-            text: 'Hệ thống sẽ tự động nộp bài của bạn.',
-            icon: 'info',
-            showConfirmButton: false,
-            timer: 2500
-        }).then(() => {
-            submitExam();
-        });
-        return;
-    }
 
     Swal.fire({
         title: 'Xác nhận nộp bài',
@@ -331,10 +255,36 @@ function confirmSubmit(isTimeout = false) {
     });
 }
 
+// ================== AUTO SUBMIT WHEN TIMEOUT ==================
+function autoSubmitExam() {
+    Swal.fire({
+        title: 'Hết thời gian làm bài',
+        text: 'Hệ thống sẽ tự động nộp bài của bạn.',
+        icon: 'info',
+        showConfirmButton: false,
+        timer: 2000
+    }).then(() => {
+        submitExam();
+    });
+}
+
 // ================== SUBMIT FORM ==================
 function submitExam() {
+    isSubmitting = true; // ✅ Cho phép rời trang
+    
     const form = document.getElementById('exam-form');
-    if (form) form.submit();
+    if (form) {
+        Swal.fire({
+            title: 'Đang xử lý...',
+            text: 'Vui lòng đợi',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        form.submit();
+    }
 }
 </script>
 @endpush

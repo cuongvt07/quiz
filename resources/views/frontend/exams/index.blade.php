@@ -27,11 +27,8 @@
                     </h2>
 
                     <!-- Loại đề thi -->
-                    <div class="mb-6">
-                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                            Loại đề thi
-                        </h3>
-                        <div class="space-y-1">
+                    <div class="space-y-4">
+                        <div>
                             <a href="{{ route('exams.list') }}" 
                                class="flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-all {{ !$type ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-gray-700 hover:bg-gray-50' }}">
                                 <span>Tất cả</span>
@@ -39,62 +36,64 @@
                                     {{ $subjects->flatMap->all()->sum('exams_count') }}
                                 </span>
                             </a>
-                            <a href="{{ route('exams.list', ['type' => 'nang_luc']) }}"
-                               class="flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-all {{ $type == 'nang_luc' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-gray-700 hover:bg-gray-50' }}">
+                        </div>
+
+                        <!-- Năng lực Dropdown -->
+                        <div x-data="{ open: {{ $type == 'nang_luc' || (request('subject') && $subjects->get('nang_luc')->pluck('id')->contains(request('subject'))) ? 'true' : 'false' }} }">
+                            <button @click="open = !open" 
+                                    class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-all {{ $type == 'nang_luc' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-gray-700 hover:bg-gray-50' }}">
                                 <span>Năng lực</span>
-                                <span class="px-2 py-0.5 text-xs font-semibold rounded-full {{ $type == 'nang_luc' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600' }}">
-                                    {{ $subjects->get('nang_luc', collect())->sum('exams_count') }}
-                                </span>
-                            </a>
-                            <a href="{{ route('exams.list', ['type' => 'tu_duy']) }}"
-                               class="flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-all {{ $type == 'tu_duy' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-gray-700 hover:bg-gray-50' }}">
+                                <div class="flex items-center">
+                                    <span class="px-2 py-0.5 text-xs font-semibold rounded-full {{ $type == 'nang_luc' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600' }} mr-2">
+                                        {{ $subjects->get('nang_luc', collect())->sum('exams_count') }}
+                                    </span>
+                                    <svg class="w-4 h-4 transition-transform" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </div>
+                            </button>
+                            
+                            <div x-show="open" x-collapse class="mt-2 ml-4 space-y-1">
+                                @foreach($subjects->get('nang_luc', collect()) as $subject)
+                                    <a href="{{ route('exams.list', ['type' => 'nang_luc', 'subject' => $subject->id]) }}"
+                                       class="flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-all {{ request('subject') == $subject->id ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-gray-700 hover:bg-gray-50' }}">
+                                        <span class="truncate">{{ $subject->name }}</span>
+                                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full {{ request('subject') == $subject->id ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600' }}">
+                                            {{ $subject->exams_count }}
+                                        </span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- Tư duy Dropdown -->
+                        <div x-data="{ open: {{ $type == 'tu_duy' || (request('subject') && $subjects->get('tu_duy')->pluck('id')->contains(request('subject'))) ? 'true' : 'false' }} }">
+                            <button @click="open = !open"
+                                    class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-all {{ $type == 'tu_duy' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-gray-700 hover:bg-gray-50' }}">
                                 <span>Tư duy</span>
-                                <span class="px-2 py-0.5 text-xs font-semibold rounded-full {{ $type == 'tu_duy' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600' }}">
-                                    {{ $subjects->get('tu_duy', collect())->sum('exams_count') }}
-                                </span>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Môn học Năng lực -->
-                    @if($subjects->has('nang_luc') && $subjects->get('nang_luc')->count() > 0)
-                    <div class="mb-6">
-                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                            Môn học Năng lực
-                        </h3>
-                        <div class="space-y-1">
-                            @foreach($subjects->get('nang_luc') as $subject)
-                                <a href="{{ route('exams.list', ['type' => 'nang_luc', 'subject' => $subject->id]) }}"
-                                   class="flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-all {{ request('subject') == $subject->id ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-gray-700 hover:bg-gray-50' }}">
-                                    <span class="truncate">{{ $subject->name }}</span>
-                                    <span class="px-2 py-0.5 text-xs font-semibold rounded-full ml-2 {{ request('subject') == $subject->id ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600' }}">
-                                        {{ $subject->exams_count }}
+                                <div class="flex items-center">
+                                    <span class="px-2 py-0.5 text-xs font-semibold rounded-full {{ $type == 'tu_duy' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600' }} mr-2">
+                                        {{ $subjects->get('tu_duy', collect())->sum('exams_count') }}
                                     </span>
-                                </a>
-                            @endforeach
+                                    <svg class="w-4 h-4 transition-transform" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </div>
+                            </button>
+                            
+                            <div x-show="open" x-collapse class="mt-2 ml-4 space-y-1">
+                                @foreach($subjects->get('tu_duy', collect()) as $subject)
+                                    <a href="{{ route('exams.list', ['type' => 'tu_duy', 'subject' => $subject->id]) }}"
+                                       class="flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-all {{ request('subject') == $subject->id ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-gray-700 hover:bg-gray-50' }}">
+                                        <span class="truncate">{{ $subject->name }}</span>
+                                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full {{ request('subject') == $subject->id ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600' }}">
+                                            {{ $subject->exams_count }}
+                                        </span>
+                                    </a>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
-                    @endif
-
-                    <!-- Môn học Tư duy -->
-                    @if($subjects->has('tu_duy') && $subjects->get('tu_duy')->count() > 0)
-                    <div>
-                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                            Môn học Tư duy
-                        </h3>
-                        <div class="space-y-1">
-                            @foreach($subjects->get('tu_duy') as $subject)
-                                <a href="{{ route('exams.list', ['type' => 'tu_duy', 'subject' => $subject->id]) }}"
-                                   class="flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-all {{ request('subject') == $subject->id ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-gray-700 hover:bg-gray-50' }}">
-                                    <span class="truncate">{{ $subject->name }}</span>
-                                    <span class="px-2 py-0.5 text-xs font-semibold rounded-full ml-2 {{ request('subject') == $subject->id ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600' }}">
-                                        {{ $subject->exams_count }}
-                                    </span>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-                    @endif
                 </div>
             </aside>
 

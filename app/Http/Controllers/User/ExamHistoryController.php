@@ -40,7 +40,7 @@ class ExamHistoryController extends Controller
 
         // Lấy câu trả lời của lượt thi này
         $answers = $attempt->answers()
-            ->with(['question.choices', 'selected_choice'])
+            ->with(['question.choices', 'choice'])
             ->get()
             ->keyBy('question_id');
 
@@ -48,7 +48,7 @@ class ExamHistoryController extends Controller
         $detailedResults = $attempt->exam->questions->map(function ($question) use ($answers) {
             $answer = $answers->get($question->id);
             $correctChoice = $question->choices->firstWhere('is_correct', true);
-            $userChoice = $answer?->selected_choice;
+            $userChoice = $answer?->choice;
             
             return [
                 'question' => $question,
@@ -70,7 +70,7 @@ class ExamHistoryController extends Controller
         if (!$attempt->correct_count) {
             $attempt->update([
                 'score' => $stats['correct_count'],
-                'correct_answers' => $stats['correct_count']
+                'correct_count' => $stats['correct_count']
             ]);
         }
 

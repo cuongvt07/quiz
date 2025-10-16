@@ -185,10 +185,10 @@
                                             </div>
                                             <div class="text-right">
                                                 <p class="text-sm font-medium text-gray-900">
-                                                    {{ $attempt->score }} điểm
+                                                    {{ $attempt->score ?? 0 }} điểm
                                                 </p>
                                                 <p class="text-xs text-gray-500">
-                                                    {{ $attempt->correct_answers }}/{{ $exam->total_questions }} câu đúng
+                                                    {{ $attempt->correct_count ?? 0 }}/{{ $exam->total_questions }} câu đúng
                                                 </p>
                                             </div>
                                         </div>

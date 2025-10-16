@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Normalizer;
 
 class UserExamController extends Controller
 {
@@ -21,7 +22,6 @@ class UserExamController extends Controller
     {
         $type = $request->get('type', Subject::TYPE_COMPETENCY);
         
-        // Validate type
         if (!in_array($type, [Subject::TYPE_COMPETENCY, Subject::TYPE_COGNITIVE])) {
             $type = Subject::TYPE_COMPETENCY;
         }
@@ -48,11 +48,8 @@ class UserExamController extends Controller
         $exam->load(['subject', 'questions']);
         
         $user = Auth::user();
-        
-        // Kiểm tra số lượt thi còn lại
         $canAttempt = $exam->canUserAttempt($user);
         
-        // Lấy lịch sử thi của user
         $attempts = ExamAttempt::where('exam_id', $exam->id)
             ->where('user_id', $user->id)
             ->where('used_free_slot', true)
@@ -69,24 +66,25 @@ class UserExamController extends Controller
     {
         $user = Auth::user();
 
-                // Kiểm tra lượt thi
-        if (!$exam->canUserAttempt($user)) {
-            return redirect()->back()->with('error', 'Bạn đã sử dụng hết 2 lượt thi miễn phí cho đề thi này! Vui lòng nâng cấp gói để tiếp tục.');
-        }
+        $usedFreeAttempts = ExamAttempt::where('user_id', $user->id)
+            ->where('used_free_slot', true)
+            ->count();
+
+        $hasFreeSlot = $usedFreeAttempts < 2;
 
         try {
             DB::beginTransaction();
 
-            // Tạo lượt thi mới
             $attempt = ExamAttempt::create([
                 'exam_id' => $exam->id,
                 'user_id' => $user->id,
                 'started_at' => now(),
-                'used_free_slot' => true,
+                'used_free_slot' => $hasFreeSlot,
             ]);
 
-            // Trừ lượt thi của user
-            $user->decrement('free_slots', 1);
+            if ($hasFreeSlot && $user->free_slots > 0) {
+                $user->decrement('free_slots');
+            }
 
             DB::commit();
 
@@ -105,7 +103,11 @@ class UserExamController extends Controller
     public function take(ExamAttempt $attempt)
     {
         if ($attempt->user_id !== Auth::id()) abort(403);
-        if ($attempt->isCompleted()) return redirect()->route('user.exams.result', $attempt);
+        
+        // ✅ Nếu đã hoàn thành -> vào kết quả
+        if ($attempt->isCompleted()) {
+            return redirect()->route('user.exams.result', $attempt);
+        }
 
         $attempt->load('exam.questions.choices');
         $exam = $attempt->exam;
@@ -114,149 +116,42 @@ class UserExamController extends Controller
         $endAt = $startedAt->copy()->addMinutes($exam->duration_minutes);
         $now = now();
 
+        // ✅ CHECK 1: Hết giờ -> tự động finish
         if ($now->greaterThanOrEqualTo($endAt)) {
-            return $this->submit($attempt);
+            $this->autoFinishAttempt($attempt);
+            return redirect()->route('user.exams.result', $attempt)
+                ->with('warning', 'Hết thời gian làm bài! Bài thi đã được tự động nộp.');
         }
 
-        // Lấy các câu trả lời đã lưu
-        $savedAnswers = ExamAttemptAnswer::where('attempt_id', $attempt->id)
-            ->pluck('choice_id', 'question_id');
+        // ✅ CHECK 2: Reload lần 2+ -> tự động finish
+        $sessionKey = "exam_attempt_{$attempt->id}_started";
+        
+        if (session()->has($sessionKey)) {
+            // Đã vào trang này rồi -> reload -> finish ngay
+            $this->autoFinishAttempt($attempt);
+            return redirect()->route('user.exams.result', $attempt)
+                ->with('warning', 'Bạn đã reload trang! Bài thi tự động được nộp.');
+        }
+
+        // ✅ Lần đầu vào -> đánh dấu session
+        session()->put($sessionKey, true);
 
         return view('frontend.user.exams.take', [
             'attempt' => $attempt,
             'exam' => $exam,
-            'savedAnswers' => $savedAnswers,
-            'endAt' => $endAt->toIso8601String(), // 🔹 gửi chuẩn sang JS
+            'endAt' => $endAt->toIso8601String(),
         ]);
-    }
-
-    /**
-     * Lưu câu trả lời tạm thời trong session
-     */
-    public function saveAnswer(Request $request, ExamAttempt $attempt)
-    {
-        // Kiểm tra quyền truy cập
-        if ($attempt->user_id !== Auth::id()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized'
-            ], 403);
-        }
-
-        // Kiểm tra đã hoàn thành chưa
-        if ($attempt->isCompleted()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Bài thi đã kết thúc'
-            ], 400);
-        }
-
-        try {
-            // Validate dữ liệu cơ bản
-            $request->validate([
-                'question_id' => 'required|exists:questions,id',
-            ]);
-
-            $questionId = $request->question_id;
-            
-            // Kiểm tra câu hỏi có thuộc đề thi này không
-            $question = $attempt->exam->questions()->with('questionChoices')->find($questionId);
-            
-            if (!$question) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Câu hỏi không tồn tại trong đề thi này'
-                ], 400);
-            }
-
-            // Kiểm tra loại câu hỏi
-            if ($question->questionChoices->count() == 1) {
-                // Câu điền
-                $request->validate([
-                    'text_answer' => 'nullable|string|max:1000',
-                ]);
-
-                $textAnswer = $request->text_answer ?? '';
-                $correctAnswer = $question->questionChoices->first();
-                
-                // Nếu câu trả lời rỗng, xóa câu trả lời
-                if (trim($textAnswer) === '') {
-                    ExamAttemptAnswer::where('attempt_id', $attempt->id)
-                        ->where('question_id', $questionId)
-                        ->delete();
-                        
-                    return response()->json(['success' => true]);
-                }
-
-                // So sánh với đáp án không phân biệt hoa thường
-                $isCorrect = strtolower(trim($textAnswer)) === strtolower(trim($correctAnswer->text));
-
-                // Lưu câu trả lời
-                ExamAttemptAnswer::updateOrCreate(
-                    [
-                        'attempt_id' => $attempt->id,
-                        'question_id' => $questionId,
-                    ],
-                    [
-                        'choice_id' => $correctAnswer->id,
-                        'text_answer' => $textAnswer,
-                        'is_correct' => $isCorrect,
-                    ]
-                );
-            } else {
-                // Câu chọn
-                $request->validate([
-                    'choice_id' => 'required|exists:question_choices,id',
-                ]);
-
-                $choiceId = $request->choice_id;
-                
-                // Kiểm tra choice có thuộc question này không
-                $choice = $question->questionChoices->find($choiceId);
-                if (!$choice) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Lựa chọn không hợp lệ'
-                    ], 400);
-                }
-
-                // Lưu câu trả lời
-                ExamAttemptAnswer::updateOrCreate(
-                    [
-                        'attempt_id' => $attempt->id,
-                        'question_id' => $questionId,
-                    ],
-                    [
-                        'choice_id' => $choiceId,
-                        'is_correct' => $choice->is_correct ?? false,
-                    ]
-                );
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Đã lưu câu trả lời'
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Lỗi hệ thống, vui lòng thử lại'
-            ], 500);
-        }
     }
 
     /**
      * Nộp bài thi
      */
-    public function submit(ExamAttempt $attempt)
+    public function submit(Request $request, ExamAttempt $attempt)
     {
-        // Kiểm tra quyền truy cập
-        if ($attempt->user_id !== Auth::id()) {
+        if ($attempt->user_id !== auth()->id()) {
             abort(403);
         }
 
-        // Nếu đã hoàn thành thì chuyển tới trang kết quả
         if ($attempt->isCompleted()) {
             return redirect()->route('user.exams.result', $attempt);
         }
@@ -264,70 +159,82 @@ class UserExamController extends Controller
         try {
             DB::beginTransaction();
 
-            $user = Auth::user();
-            
-            // Kiểm tra số lượt thi free đã sử dụng
-            $usedFreeAttempts = ExamAttempt::where('exam_id', $attempt->exam_id)
-                ->where('user_id', $user->id)
-                ->where('used_free_slot', true)
-                ->count();
+            $exam = $attempt->exam;
+            $exam->load('questions.choices');
 
-            // Nếu đã sử dụng 2 lượt free thì lượt này không tính là free
-            $isFreeslot = $usedFreeAttempts < 2;
-            
-            // Load câu hỏi và câu trả lời
-            $attempt->load(['exam.questions.questionChoices', 'examAttemptAnswers']);
-            
+            $answers = $request->input('answers', []);
             $correctCount = 0;
-            $wrongCount = 0;
-            $totalQuestions = $attempt->exam->total_questions;
+            $totalQuestions = $exam->total_questions;
 
-            // Đếm số câu đúng/sai từ câu trả lời đã chọn
-            foreach ($attempt->exam->questions as $question) {
-                $userAnswer = $attempt->examAttemptAnswers->where('question_id', $question->id)->first();
-                
+            // Xử lý từng câu trả lời
+            foreach ($exam->questions as $question) {
+                $questionId = $question->id;
+                $userAnswer = $answers[$questionId] ?? null;
+
+                if (!$userAnswer) continue; // Bỏ qua câu không trả lời
+
+                $isCorrect = false;
+                $choiceId = null;
+                $textAnswer = null;
+
                 // Kiểm tra loại câu hỏi
-                if ($question->questionChoices->count() == 1) {
-                    // Câu điền
-                    if ($userAnswer && $userAnswer->is_correct) {
-                        $correctCount++;
+                if ($question->choices->count() == 1) {
+
+                    $textAnswer = trim($userAnswer);
+                    $correctAnswer = trim($question->choices->first()->name);
+                    $choiceId = $question->choices->first()->id;
+
+                    // --- Nếu là số (có thể chứa dấu phẩy hoặc chấm) ---
+                    $numUser = str_replace(',', '.', $textAnswer);
+                    $numCorrect = str_replace(',', '.', $correctAnswer);
+
+                    if (is_numeric($numUser) && is_numeric($numCorrect)) {
+                        $isCorrect = abs(floatval($numUser) - floatval($numCorrect)) < 0.0001;
                     } else {
-                        $wrongCount++;
+                        // --- So sánh chữ: bỏ dấu, bỏ khoảng trắng dư, không phân biệt hoa/thường ---
+                        $normalize = function ($text) {
+                            $text = mb_strtolower(trim($text));
+                            $text = str_replace([' ', ' '], '', $text); // bỏ khoảng trắng
+                            $text = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $text); // bỏ dấu tiếng Việt
+                            return preg_replace('/[^a-z0-9]/', '', $text); // bỏ ký tự đặc biệt
+                        };
+
+                        $isCorrect = $normalize($textAnswer) === $normalize($correctAnswer);
                     }
+
                 } else {
-                    // Câu chọn
-                    $correctChoice = $question->questionChoices->where('is_correct', true)->first();
-                    if ($userAnswer && $userAnswer->choice_id === $correctChoice->id) {
-                        $correctCount++;
-                    } else {
-                        $wrongCount++;
+                    // Câu trắc nghiệm
+                    $choiceId = $userAnswer;
+                    $choice = $question->choices->find($choiceId);
+                    
+                    if ($choice) {
+                        $isCorrect = $choice->is_correct ?? false;
                     }
                 }
+
+                // Lưu câu trả lời
+                ExamAttemptAnswer::create([
+                    'attempt_id' => $attempt->id,
+                    'question_id' => $questionId,
+                    'choice_id' => $choiceId,
+                    'text_answer' => $textAnswer,
+                    'is_correct' => $isCorrect,
+                ]);
+
+                if ($isCorrect) {
+                    $correctCount++;
+                }
             }
+
+            $wrongCount = $totalQuestions - $correctCount;
 
             // Cập nhật kết quả
             $attempt->update([
                 'finished_at' => now(),
                 'score' => $correctCount,
                 'correct_count' => $correctCount,
-                'wrong_count' => $wrongCount,
-                'used_free_slot' => $isFreeslot
+                'wrong_count' => $wrongCount
             ]);
-
-            // Cập nhật kết quả và đánh dấu đã hoàn thành
-            $attempt->update([
-                'finished_at' => now(),
-                'score' => $correctCount,
-                'correct_count' => $correctCount,
-                'wrong_count' => $wrongCount,
-                'used_free_slot' => $isFreeslot
-            ]);
-
-            // Nếu là lượt free và còn free_slots thì trừ đi 1
-            if ($isFreeslot && $user->free_slots > 0) {
-                $user->free_slots = $user->free_slots - 1;
-                $user->save();
-            }
 
             DB::commit();
 
@@ -337,23 +244,79 @@ class UserExamController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Lỗi khi nộp bài thi: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Có lỗi xảy ra khi nộp bài!');
+            \Log::error($e->getTraceAsString());
+            return redirect()->back()->with('error', 'Có lỗi xảy ra khi nộp bài thi!');
         }
     }
 
     /**
-     * Xem kết quả bài thi
+     * Tự động nộp bài khi hết giờ
+     */
+    private function autoSubmit(ExamAttempt $attempt)
+    {
+        if ($attempt->isCompleted()) {
+            return redirect()->route('user.exams.result', $attempt);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $exam = $attempt->exam;
+            $exam->load('questions.choices');
+
+            $correctCount = 0;
+            $totalQuestions = $exam->total_questions;
+
+            // Không có câu trả lời nào
+            $attempt->update([
+                'finished_at' => now(),
+                'score' => 0,
+                'correct_count' => 0,
+                'wrong_count' => $totalQuestions
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('user.exams.result', $attempt)
+                ->with('warning', 'Hết thời gian làm bài! Bài thi đã được tự động nộp.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Lỗi khi tự động nộp bài: ' . $e->getMessage());
+            return redirect()->route('user.dashboard')->with('error', 'Có lỗi xảy ra!');
+        }
+    }
+
+    /**
+     * Hiển thị kết quả bài thi
      */
     public function result(ExamAttempt $attempt)
     {
-        // Kiểm tra quyền truy cập
-        if ($attempt->user_id !== Auth::id()) {
+        if ($attempt->user_id !== auth()->id()) {
             abort(403);
         }
 
-        $attempt->load(['exam.subject', 'exam.questions.questionChoices', 'examAttemptAnswers.choice']);
+        if (!$attempt->isCompleted()) {
+            return redirect()->route('user.exams.take', $attempt);
+        }
 
-        return view('frontend.exams.result', compact('attempt'));
+        $attempt->load(['exam.subject', 'answers.question.choices', 'answers.choice']);
+
+        // Tạo detailed results cho từng câu hỏi
+        $detailedResults = [];
+        foreach ($attempt->exam->questions as $question) {
+            $userAnswer = $attempt->answers->where('question_id', $question->id)->first();
+            $correctChoice = $question->choices->where('is_correct', true)->first();
+
+            $detailedResults[] = [
+                'question' => $question,
+                'user_answer' => $userAnswer,
+                'correct_choice' => $correctChoice,
+                'is_correct' => $userAnswer ? $userAnswer->is_correct : false,
+            ];
+        }
+
+        return view('frontend.user.exams.result', compact('attempt', 'detailedResults'));
     }
 
     /**
@@ -377,5 +340,42 @@ class UserExamController extends Controller
         $attempts = $query->orderByDesc('finished_at')->paginate(10);
 
         return view('frontend.exams.history', compact('attempts', 'type'));
+    }
+
+    /**
+     * Chuẩn hóa text để so sánh
+     */
+    private function normalizeText($text) {
+        $text = mb_strtolower(trim($text), 'UTF-8');
+        $text = Normalizer::normalize($text, Normalizer::FORM_D);
+        $text = preg_replace('/\p{M}/u', '', $text);
+        return $text;
+    }
+
+    /**
+     * ✅ Tự động finish attempt (không có câu trả lời)
+     */
+    private function autoFinishAttempt(ExamAttempt $attempt)
+    {
+        if ($attempt->isCompleted()) {
+            return;
+        }
+
+        try {
+            $totalQuestions = $attempt->exam->total_questions;
+
+            $attempt->update([
+                'finished_at' => now(),
+                'score' => 0,
+                'correct_count' => 0,
+                'wrong_count' => $totalQuestions
+            ]);
+
+            // ✅ Xóa session tracking
+            session()->forget("exam_attempt_{$attempt->id}_started");
+
+        } catch (\Exception $e) {
+            \Log::error('Lỗi khi tự động finish: ' . $e->getMessage());
+        }
     }
 }

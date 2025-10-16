@@ -124,7 +124,7 @@
             </p>
         </div>
 
-        <div class="grid md:grid-cols-3 gap-8">
+    <div class="grid md:grid-cols-2 justify-center gap-16">
             <!-- Top Attempts (Highest Scores) -->
             <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
                 <div class="p-6 bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500">
@@ -137,9 +137,9 @@
                         </div>
                         
                         <!-- Filters -->
-                        <form class="grid grid-cols-2 gap-2">
+                        <form id="ranking-section" method="GET" class="grid grid-cols-2 gap-2">
                             <div class="relative">
-                                <select name="exam_id" class="w-full pl-3 pr-10 py-2 text-sm bg-white/20 backdrop-blur-sm text-white rounded-lg border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50">
+                                <select name="exam_id" class="w-full pl-3 pr-10 py-2 text-sm bg-white text-black rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-400">
                                     <option value="">Tất cả đề thi</option>
                                     @foreach($exams as $exam)
                                         <option value="{{ $exam->id }}" {{ $selectedExam == $exam->id ? 'selected' : '' }}>
@@ -149,7 +149,7 @@
                                 </select>
                             </div>
                             <div class="relative">
-                                <select name="month" class="w-full pl-3 pr-10 py-2 text-sm bg-white/20 backdrop-blur-sm text-white rounded-lg border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50">
+                                <select name="month" class="w-full pl-3 pr-10 py-2 text-sm bg-white text-black rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-400">
                                     @foreach($months as $key => $month)
                                         <option value="{{ $key }}" {{ $selectedMonth == $key ? 'selected' : '' }}>
                                             Tháng {{ $key }}
@@ -157,7 +157,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <button type="submit" class="col-span-2 py-2 px-4 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white text-sm rounded-lg border border-white/30 transition-colors">
+                            <button type="submit" class="col-span-2 py-2 px-4 bg-yellow-400 hover:bg-yellow-500 text-black text-sm font-semibold rounded-lg border border-yellow-500 transition-colors">
                                 Lọc kết quả
                             </button>
                         </form>
@@ -345,107 +345,6 @@
                                         <h4 class="font-bold text-gray-800 text-sm mb-1">{{ Str::limit($topUsers[2]->name, 12) }}</h4>
                                         <p class="text-xl font-extrabold text-indigo-600 mb-0.5">{{ $topUsers[2]->exam_attempts_count }}</p>
                                         <p class="text-xs text-gray-500">lượt thi</p>
-                                    </div>
-                                </div>
-                                @endif
-                            </div>
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Top Subscribers -->
-            <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
-                <div class="p-6 bg-gradient-to-r from-purple-400 via-purple-500 to-pink-500 text-white">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-2xl font-bold">Người Dùng VIP</h3>
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <p class="text-purple-100">Top 3 người dùng mua gói nhiều nhất</p>
-                </div>
-                
-                <div class="p-6 pb-12">
-                    @if($topSubscribers->isEmpty())
-                        <div class="text-center text-gray-500 py-12">
-                            Chưa có dữ liệu
-                        </div>
-                    @else
-                        <div class="relative min-h-[380px] flex items-end justify-center">
-                            <!-- Podium Platform Background -->
-                            <div class="absolute bottom-0 left-0 right-0 flex items-end justify-center gap-2 px-4">
-                                @if(isset($topSubscribers[1]))
-                                <div class="w-1/3 h-24 bg-gradient-to-t from-purple-300 via-purple-200 to-purple-100 rounded-t-2xl border-t-4 border-purple-400 shadow-lg"></div>
-                                @endif
-                                @if(isset($topSubscribers[0]))
-                                <div class="w-1/3 h-32 bg-gradient-to-t from-purple-600 via-purple-500 to-pink-400 rounded-t-2xl border-t-4 border-purple-700 shadow-xl"></div>
-                                @endif
-                                @if(isset($topSubscribers[2]))
-                                <div class="w-1/3 h-20 bg-gradient-to-t from-pink-400 via-pink-300 to-pink-200 rounded-t-2xl border-t-4 border-pink-500 shadow-lg"></div>
-                                @endif
-                            </div>
-                            
-                            <!-- Winners on Podium -->
-                            <div class="relative w-full flex items-end justify-center gap-2 px-4 pb-2">
-                                <!-- Top 2 (Left) -->
-                                @if(isset($topSubscribers[1]))
-                                <div class="w-1/3 flex flex-col items-center mb-24 transform transition-all duration-300 hover:scale-105 hover:-translate-y-2">
-                                    <div class="relative mb-3">
-                                        <div class="w-20 h-20 bg-gradient-to-br from-purple-200 to-purple-400 rounded-full flex items-center justify-center border-4 border-white shadow-xl">
-                                            <span class="text-2xl font-bold text-purple-700">2</span>
-                                        </div>
-                                        <div class="absolute -top-2 -right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg">
-                                            <span class="text-2xl">🥈</span>
-                                        </div>
-                                    </div>
-                                    <div class="text-center">
-                                        <h4 class="font-bold text-gray-800 text-sm mb-1">{{ Str::limit($topSubscribers[1]->name, 12) }}</h4>
-                                        <p class="text-xl font-extrabold text-purple-600 mb-0.5">{{ $topSubscribers[1]->user_subscriptions_count }}</p>
-                                        <p class="text-xs text-gray-500">gói đã mua</p>
-                                    </div>
-                                </div>
-                                @endif
-
-                                <!-- Top 1 (Center) -->
-                                @if(isset($topSubscribers[0]))
-                                <div class="w-1/3 flex flex-col items-center mb-32 transform transition-all duration-300 hover:scale-110 hover:-translate-y-3">
-                                    <div class="relative mb-4">
-                                        <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-                                            <span class="text-4xl drop-shadow-lg">👑</span>
-                                        </div>
-                                        <div class="w-24 h-24 bg-gradient-to-br from-purple-400 via-purple-500 to-pink-500 rounded-full flex items-center justify-center border-4 border-white shadow-2xl relative">
-                                            <span class="text-3xl font-extrabold text-white">1</span>
-                                            <div class="absolute -top-1 -left-1 w-3 h-3 bg-white rounded-full animate-ping"></div>
-                                            <div class="absolute -bottom-1 -right-1 w-2 h-2 bg-white rounded-full animate-ping" style="animation-delay: 0.5s"></div>
-                                        </div>
-                                        <div class="absolute -top-2 -right-2 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl">
-                                            <span class="text-3xl">💎</span>
-                                        </div>
-                                    </div>
-                                    <div class="text-center">
-                                        <h4 class="font-extrabold text-gray-900 text-base mb-1">{{ Str::limit($topSubscribers[0]->name, 12) }}</h4>
-                                        <p class="text-2xl font-black text-transparent bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text mb-1">{{ $topSubscribers[0]->user_subscriptions_count }}</p>
-                                        <p class="text-xs text-gray-600 font-semibold">gói đã mua</p>
-                                    </div>
-                                </div>
-                                @endif
-
-                                <!-- Top 3 (Right) -->
-                                @if(isset($topSubscribers[2]))
-                                <div class="w-1/3 flex flex-col items-center mb-20 transform transition-all duration-300 hover:scale-105 hover:-translate-y-2">
-                                    <div class="relative mb-3">
-                                        <div class="w-20 h-20 bg-gradient-to-br from-pink-200 to-pink-400 rounded-full flex items-center justify-center border-4 border-white shadow-xl">
-                                            <span class="text-2xl font-bold text-pink-700">3</span>
-                                        </div>
-                                        <div class="absolute -top-2 -right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg">
-                                            <span class="text-2xl">🥉</span>
-                                        </div>
-                                    </div>
-                                    <div class="text-center">
-                                        <h4 class="font-bold text-gray-800 text-sm mb-1">{{ Str::limit($topSubscribers[2]->name, 12) }}</h4>
-                                        <p class="text-xl font-extrabold text-purple-600 mb-0.5">{{ $topSubscribers[2]->user_subscriptions_count }}</p>
-                                        <p class="text-xs text-gray-500">gói đã mua</p>
                                     </div>
                                 </div>
                                 @endif
@@ -739,10 +638,7 @@
 
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="{{ route('register') }}" class="px-8 py-4 bg-white text-blue-600 rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
-                Đăng ký miễn phí
-            </a>
-            <a href="{{ route('exams.list') }}" class="px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white rounded-2xl font-semibold text-lg hover:bg-white/20 transform hover:scale-105 transition-all duration-300">
-                Xem demo
+                Đăng ký tài khoản ngay <span>( Nhận ngay 2 lượt thi miễn phí )</span>
             </a>
         </div>
     </div>
@@ -753,134 +649,101 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Create floating elements
-    const floatingContainer = document.getElementById('floating-elements');
-    if (floatingContainer) {
-        for (let i = 0; i < 6; i++) {
-            const dot = document.createElement('div');
-            dot.className = 'absolute animate-float';
-            dot.style.left = Math.random() * 100 + '%';
-            dot.style.top = Math.random() * 100 + '%';
-            dot.style.animationDelay = i * 0.5 + 's';
-            dot.style.animationDuration = (3 + Math.random() * 2) + 's';
-            
-            const inner = document.createElement('div');
-            inner.className = 'w-2 h-2 bg-blue-400 rounded-full opacity-40';
-            dot.appendChild(inner);
-            floatingContainer.appendChild(dot);
-        }
-    }
+    // === 1. HIỆU ỨNG FLOATING ELEMENTS ===
+    const floatingEls = document.querySelectorAll('[data-float]');
+    floatingEls.forEach(el => {
+        const range = parseInt(el.getAttribute('data-float')) || 10;
+        const duration = 3000 + Math.random() * 2000;
+        const direction = Math.random() > 0.5 ? 1 : -1;
 
-    // Smooth scroll for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
+        el.animate([
+            { transform: `translateY(0px)` },
+            { transform: `translateY(${direction * range}px)` },
+            { transform: `translateY(0px)` }
+        ], {
+            duration: duration,
+            iterations: Infinity,
+            easing: 'ease-in-out'
         });
     });
 
-    // Intersection Observer for animations
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -100px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }
-        });
-    }, observerOptions);
-
-    // Observe feature cards and exam cards
-    document.querySelectorAll('.feature-card, .exam-card').forEach(card => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(30px)';
-        card.style.transition = 'all 0.6s ease-out';
-        observer.observe(card);
-    });
-
-    // Add stagger effect to cards
-    document.querySelectorAll('.feature-card').forEach((card, index) => {
-        card.style.transitionDelay = (index * 0.1) + 's';
-    });
-
-    document.querySelectorAll('.exam-card').forEach((card, index) => {
-        card.style.transitionDelay = (index * 0.2) + 's';
-    });
-
-    // Parallax effect on scroll
-    let scrollPos = 0;
+    // === 2. HIỆU ỨNG PARALLAX SCROLL ===
+    const parallaxEls = document.querySelectorAll('[data-parallax]');
     window.addEventListener('scroll', () => {
-        scrollPos = window.pageYOffset;
-        
-        // Parallax for hero section
-        const hero = document.querySelector('.relative.min-h-screen');
-        if (hero && scrollPos < hero.offsetHeight) {
-            const parallaxElements = hero.querySelectorAll('.absolute.inset-0 > div');
-            parallaxElements.forEach((el, index) => {
-                const speed = 0.5 + (index * 0.1);
-                el.style.transform = `translateY(${scrollPos * speed}px)`;
-            });
-        }
+        const scrollY = window.scrollY;
+        parallaxEls.forEach(el => {
+            const speed = parseFloat(el.getAttribute('data-parallax')) || 0.3;
+            el.style.transform = `translateY(${scrollY * speed}px)`;
+        });
     });
 
-    // Add hover effect to hero button
-    const heroBtn = document.querySelector('.hero-btn');
-    if (heroBtn) {
-        heroBtn.addEventListener('mouseenter', function() {
-            this.style.transform = 'scale(1.05)';
+    // === 3. HIỆU ỨNG ĐẾM SỐ COUNTER ===
+    const counters = document.querySelectorAll('[data-count]');
+    const animateCounters = () => {
+        counters.forEach(counter => {
+            const updateCount = () => {
+                const target = +counter.getAttribute('data-count');
+                const current = +counter.innerText.replace(/,/g, '');
+                const increment = Math.ceil(target / 60);
+                if (current < target) {
+                    counter.innerText = (current + increment).toLocaleString();
+                    setTimeout(updateCount, 20);
+                } else {
+                    counter.innerText = target.toLocaleString();
+                }
+            };
+            updateCount();
         });
-        heroBtn.addEventListener('mouseleave', function() {
-            this.style.transform = 'scale(1)';
+    };
+
+    // Kích hoạt khi phần tử visible
+    const counterObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateCounters();
+                observer.disconnect();
+            }
+        });
+    }, { threshold: 0.3 });
+
+    counters.forEach(counter => counterObserver.observe(counter));
+
+    // === 4. FORM LỌC BẢNG XẾP HẠNG ===
+    const form = document.getElementById('ranking-section');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const query = new URLSearchParams(new FormData(form)).toString();
+            // Reload lại trang với anchor đến bảng xếp hạng
+            window.location.href = `?${query}#ranking-section`;
         });
     }
 
-    // Counter animation for stats
-    const animateCounter = (element, target, duration = 2000) => {
-        const start = 0;
-        const increment = target / (duration / 16);
-        let current = start;
-        
-        const timer = setInterval(() => {
-            current += increment;
-            if (current >= target) {
-                element.textContent = target;
-                clearInterval(timer);
-            } else {
-                element.textContent = Math.floor(current);
-            }
-        }, 16);
+    // === 5. TỰ ĐỘNG CUỘN XUỐNG PHẦN BẢNG XẾP HẠNG ===
+    const scrollToRanking = () => {
+        const section = document.getElementById('ranking-section');
+        if (section) {
+            console.log('Scrolling to:', section);
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            console.warn('Không tìm thấy #ranking-section, thử lại...');
+            // Nếu chưa render, thử lại sau 500ms
+            setTimeout(scrollToRanking, 500);
+        }
     };
 
-    // Trigger counter animation when stats come into view
-    const statsObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const statValue = entry.target.querySelector('.text-3xl');
-                const value = statValue.textContent.replace(/[^0-9]/g, '');
-                if (value && !entry.target.dataset.animated) {
-                    entry.target.dataset.animated = 'true';
-                    statValue.textContent = '0';
-                    setTimeout(() => {
-                        animateCounter(statValue, parseInt(value));
-                    }, 300);
-                }
-            }
-        });
-    }, { threshold: 0.5 });
+    const shouldScroll =
+        window.location.hash === '#ranking-section' ||
+        window.location.search.includes('exam_id') ||
+        window.location.search.includes('month');
 
-    document.querySelectorAll('.bg-white\\/60.backdrop-blur-sm').forEach(stat => {
-        statsObserver.observe(stat);
-    });
+    if (shouldScroll) {
+        console.log('Scrolling to ranking section...');
+        // Chờ toàn bộ trang render xong rồi mới cuộn
+        window.addEventListener('load', function() {
+            setTimeout(scrollToRanking, 500);
+        });
+    }
 });
 </script>
 @endpush
