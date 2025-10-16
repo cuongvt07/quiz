@@ -47,23 +47,25 @@ class ExamHistoryController extends Controller
         // Map với các câu hỏi trong đề thi
         $detailedResults = $attempt->exam->questions->map(function ($question) use ($answers) {
             $answer = $answers->get($question->id);
-            $correctChoice = $question->choices->firstWhere('is_correct', true);
-            $userChoice = $answer?->choice;
-            
+            $correctChoice = $question->choices->firstWhere('is_correct', 1);
+            $userChoice = $answer?->selected_choice;
+            $hasAnswer = !is_null($userChoice);
+
             return [
                 'question' => $question,
                 'user_answer' => $userChoice,
                 'correct_choice' => $correctChoice,
-                'is_correct' => $userChoice && $userChoice->id === $correctChoice?->id,
+                'is_correct' => $hasAnswer && $userChoice->id === $correctChoice?->id,
+                'answered' => $hasAnswer
             ];
         });
 
         // Tính toán số liệu thống kê
         $stats = [
             'total_questions' => $attempt->exam->questions->count(),
-            'correct_count' => $detailedResults->where('is_correct', true)->count(),
-            'wrong_count' => $detailedResults->whereNotNull('user_answer')->where('is_correct', false)->count(),
-            'unanswered_count' => $detailedResults->whereNull('user_answer')->count()
+            'correct_count' => $detailedResults->where('is_correct', 1)->count(),
+            'wrong_count' => $detailedResults->where('answered', true)->where('is_correct', false)->count() + $detailedResults->where('answered', false)->count(),
+            'unanswered_count' => $detailedResults->where('answered', false)->count()
         ];
 
         // Cập nhật lại attempt nếu chưa có thông tin

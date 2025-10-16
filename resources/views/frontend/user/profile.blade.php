@@ -215,12 +215,44 @@
 
             {{-- TAB 3: Thống kê --}}
             <div x-show="tab === 'stats'" x-cloak>
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Thống kê kết quả theo từng đề thi</h2>
+                <div class="overflow-hidden rounded-lg border border-gray-200 mb-6">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên đề thi</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Môn</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Điểm trung bình</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Điểm cao nhất</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Số lượt thi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($examStats as $stat)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4">{{ $stat['title'] }}</td>
+                                    <td class="px-6 py-4 text-gray-500">{{ $stat['subject'] }}</td>
+                                    <td class="px-6 py-4 text-center">{{ number_format($stat['avg_score'], 1) }}</td>
+                                    <td class="px-6 py-4 text-center">{{ $stat['max_score'] }}</td>
+                                    <td class="px-6 py-4 text-center">{{ $stat['count'] }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                        Chưa có lượt thi nào.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                {{-- Thống kê tổng --}}
                 @php
                     $avgScore = $allAttempts->avg('score') ?? 0;
                     $total = $allAttempts->count();
                     $highest = $allAttempts->max('score') ?? 0;
                 @endphp
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Thống kê kết quả</h2>
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Thống kê tổng</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="bg-blue-50 p-4 rounded-lg text-center">
                         <div class="text-sm text-gray-500 mb-1">Trung bình</div>
