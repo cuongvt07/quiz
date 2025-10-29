@@ -42,11 +42,12 @@ $(document).ready(function() {
             type: method,
             data: data,
             success: function(res) {
-                location.reload();
-            },
-            error: function(xhr) {
-                alert('Có lỗi xảy ra!');
-            }
+                    try { showNotification('Tạo mới người dùng thành công!', 'success'); } catch (e) { console.warn('showNotification missing', e); }
+                    setTimeout(function(){ location.reload(); }, 800);
+                },
+                error: function(xhr) {
+                    try { showNotification('Có lỗi xảy ra!', 'error'); } catch (e) { alert('Có lỗi xảy ra!'); }
+                }
         });
     });
 
@@ -61,11 +62,12 @@ $(document).ready(function() {
                 _token: $('meta[name="csrf-token"]').attr('content')
             },
             success: function(res) {
-                location.reload();
-            },
-            error: function(xhr) {
-                alert('Không thể xóa tài khoản!');
-            }
+                    try { showNotification('Xóa thành công', 'success'); } catch (e) { console.warn('showNotification missing', e); }
+                    setTimeout(function(){ location.reload(); }, 700);
+                },
+                error: function(xhr) {
+                    try { showNotification('Không thể xóa tài khoản!', 'error'); } catch (e) { alert('Không thể xóa tài khoản!'); }
+                }
         });
     });
 });

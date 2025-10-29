@@ -245,7 +245,15 @@ class ExamController extends Controller
     public function batchUpdateQuestions(Request $request, Exam $exam)
     {
         try {
+            // Ensure each question has a default 'loai' if the form didn't send one
+            $defaultLoai = Question::LOAI_NHAN_BIET;
             $filtered = collect($request->input('questions', []))
+                ->map(function ($q) use ($defaultLoai) {
+                    if (!isset($q['loai']) || $q['loai'] === '' || $q['loai'] === null) {
+                        $q['loai'] = $defaultLoai;
+                    }
+                    return $q;
+                })
                 ->filter(fn($q) => !empty($q['question']))
                 ->values()
                 ->toArray();

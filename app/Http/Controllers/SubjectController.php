@@ -24,8 +24,10 @@ class SubjectController extends Controller
 
     public function store(Request $request)
     {
+        $types = array_keys(Subject::getTypes());
         $data = $request->validate([
             'name' => 'required|string|max:255',
+            'type' => ['required', 'in:' . implode(',', $types)],
         ]);
         Subject::create($data);
         return redirect()->route('admin.subjects.index')->with('success', 'Tạo môn học thành công!');
@@ -38,8 +40,10 @@ class SubjectController extends Controller
 
     public function update(Request $request, Subject $subject)
     {
+        $types = array_keys(Subject::getTypes());
         $data = $request->validate([
             'name' => 'required|string|max:255',
+            'type' => ['required', 'in:' . implode(',', $types)],
         ]);
         $subject->update($data);
         return redirect()->route('admin.subjects.index')->with('success', 'Cập nhật môn học thành công!');

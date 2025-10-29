@@ -45,20 +45,21 @@ class ExamHistoryController extends Controller
             ->keyBy('question_id');
 
         // Map với các câu hỏi trong đề thi
-        $detailedResults = $attempt->exam->questions->map(function ($question) use ($answers) {
-            $answer = $answers->get($question->id);
-            $correctChoice = $question->choices->firstWhere('is_correct', 1);
-            $userChoice = $answer?->selected_choice;
-            $hasAnswer = !is_null($userChoice);
+            $detailedResults = $attempt->exam->questions->map(function ($question) use ($answers) {
+                $answer = $answers->get($question->id);
+                $correctChoice = $question->choices->firstWhere('is_correct', 1);
+                // The ExamAttemptAnswer model defines a 'choice' relation; use it to get the selected choice model
+                $userChoice = $answer?->choice;
+                $hasAnswer = !is_null($userChoice) || !is_null($answer?->text_answer);
 
-            return [
-                'question' => $question,
-                'user_answer' => $userChoice,
-                'correct_choice' => $correctChoice,
-                'is_correct' => $hasAnswer && $userChoice->id === $correctChoice?->id,
-                'answered' => $hasAnswer
-            ];
-        });
+                return [
+                    'question' => $question,
+                    'user_answer' => $userChoice ?: $answer, // keep the choice model if available, otherwise the answer (for text answers)
+                    'correct_choice' => $correctChoice,
+                    'is_correct' => $answer ? (bool) $answer->is_correct : false,
+                    'answered' => $hasAnswer
+                ];
+            });
 
         // Tính toán số liệu thống kê
         $stats = [

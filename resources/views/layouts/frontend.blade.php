@@ -28,6 +28,50 @@
     @stack('styles')
 </head>
 <body class="bg-gray-50">
+    <script>
+        // Robust notification helper
+        (function(){
+            window.__pending_notifications = window.__pending_notifications || [];
+
+            function dispatchNotification(detail) {
+                try {
+                    window.dispatchEvent(new CustomEvent('notification', { detail }));
+                } catch (e) {
+                    console.warn('notification dispatch failed', e);
+                }
+            }
+
+            function deliver(msg, type) {
+                // Prefer window.toast if available
+                if (window.toast && typeof window.toast[type] === 'function') {
+                    try { window.toast[type](msg); return; } catch (e) { /* fallthrough */ }
+                }
+                dispatchNotification({ message: msg, type });
+            }
+
+            window.showNotification = function(message, type = 'success') {
+                if (document.readyState === 'loading') {
+                    window.__pending_notifications.push({ message, type });
+                    return;
+                }
+                deliver(message, type);
+            };
+
+            // expose backwards-compatible global
+            if (typeof window.notification === 'undefined') {
+                window.notification = function(msg, type = 'info') { window.showNotification(msg, type); };
+                window.notification.show = function(msg, type = 'info') { window.showNotification(msg, type); };
+            }
+
+            // flush queued notifications after DOM ready
+            document.addEventListener('DOMContentLoaded', function() {
+                if (window.__pending_notifications && window.__pending_notifications.length) {
+                    window.__pending_notifications.forEach(n => deliver(n.message, n.type));
+                    window.__pending_notifications = [];
+                }
+            });
+        })();
+    </script>
     <!-- Navigation -->
     <nav class="bg-white shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -120,6 +164,17 @@
                                         </button>
                                     </form>
                                 </div>
+                                @if(Auth::user()->role === 'admin')
+                                    <div class="py-1">
+                                        <div class="border-t border-gray-200"></div>
+                                        <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            <svg class="mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v4H3V3zM3 9h14v8a1 1 0 01-1 1H4a1 1 0 01-1-1V9zm5 2a1 1 0 100 2h4a1 1 0 100-2H8z" />
+                                            </svg>
+                                            Bảng điều khiển Admin
+                                        </a>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     @else

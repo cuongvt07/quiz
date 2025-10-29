@@ -13,5 +13,6 @@ class QuestionChoice extends Model
         'question_id',
         'is_correct',
         'name',
+        'explanation',
     ];
 }

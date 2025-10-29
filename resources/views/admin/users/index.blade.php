@@ -73,7 +73,6 @@
                 <select name="role" id="userRole" class="w-full border rounded px-3 py-2" required>
                     <option value="admin">Admin</option>
                     <option value="user">Người dùng</option>
-                    <option value="member">Thành viên nâng cấp</option>
                 </select>
             </div>
             <div class="flex justify-end">
@@ -85,9 +84,13 @@
 
 <script src="/js/users.js"></script>
 <script>
-    document.getElementById('role').addEventListener('change', function() {
-        document.getElementById('filterForm').submit();
-    });
+    const roleEl = document.getElementById('role');
+    if (roleEl) {
+        roleEl.addEventListener('change', function() {
+            const form = document.getElementById('filterForm');
+            if (form) form.submit();
+        });
+    }
     feather.replace();
 </script>
 @endsection
