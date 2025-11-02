@@ -300,23 +300,34 @@ class UserExamController extends Controller
             return redirect()->route('user.exams.take', $attempt);
         }
 
-        $attempt->load(['exam.subject', 'answers.question.choices', 'answers.choice']);
+        $attempt->load(['exam.subject', 'answers.question.choices', 'answers.choice', 'exam.questions.choices']);
 
-        // Tạo detailed results cho từng câu hỏi
-        $detailedResults = [];
-        foreach ($attempt->exam->questions as $question) {
-            $userAnswer = $attempt->answers->where('question_id', $question->id)->first();
+        $questions = $attempt->exam->questions;
+        $answers = $attempt->answers->keyBy('question_id');
+
+        $detailedResults = $questions->map(function ($question) use ($answers) {
+            $userAnswer = $answers->get($question->id);
             $correctChoice = $question->choices->where('is_correct', true)->first();
-
-            $detailedResults[] = [
+            return [
                 'question' => $question,
                 'user_answer' => $userAnswer,
                 'correct_choice' => $correctChoice,
                 'is_correct' => $userAnswer ? $userAnswer->is_correct : false,
+                'answered' => $userAnswer && ($userAnswer->choice_id || $userAnswer->text_answer),
             ];
-        }
+        });
 
-        return view('frontend.user.exams.result', compact('attempt', 'detailedResults'));
+        $unansweredCount = $detailedResults->where('answered', false)->count();
+        $correctCount = $detailedResults->where('is_correct', true)->count();
+        $wrongCount = $detailedResults->where('answered', true)->where('is_correct', false)->count();
+
+        return view('frontend.user.exams.result', [
+            'attempt' => $attempt,
+            'detailedResults' => $detailedResults,
+            'unansweredCount' => $unansweredCount,
+            'correctCount' => $correctCount,
+            'wrongCount' => $wrongCount,
+        ]);
     }
 
     /**

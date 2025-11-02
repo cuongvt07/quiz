@@ -59,6 +59,8 @@ Route::middleware([
         Route::get('/detail/{attempt}', [\App\Http\Controllers\User\ExamHistoryController::class, 'show'])->name('show');
     });
 
+    Route::get('/admin/accounts/export', [\App\Http\Controllers\UsersController::class, 'export'])->name('admin.accounts.export');
+
     // Bài thi người dùng
     Route::prefix('exams')->name('user.exams.')->group(function () {
         Route::get('/', [\App\Http\Controllers\User\UserExamController::class, 'index'])->name('index');
@@ -97,6 +99,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Dashboard
     Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/exams/export', [\App\Http\Controllers\ExamController::class, 'export'])->name('exams.export');
 
     // Lịch sử thi
     Route::prefix('exam-attempts')->name('exam-attempts.')->group(function () {

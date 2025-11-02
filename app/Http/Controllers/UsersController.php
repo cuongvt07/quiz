@@ -11,19 +11,33 @@ class UsersController extends Controller
     // Hiển thị danh sách quản trị viên
     public function admins(Request $request)
     {
-    $role = 'admin';
-    $users = User::where('role', $role)->orderByDesc('id')->paginate(10);
-    $tab = 'admins';
-    return view('admin.users.index', compact('users', 'tab', 'role'));
+        $role = 'admin';
+        $query = User::where('role', $role);
+        if ($search = $request->get('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                  ->orWhere('email', 'like', "%$search%") ;
+            });
+        }
+        $users = $query->orderByDesc('id')->paginate(10);
+        $tab = 'admins';
+        return view('admin.users.index', compact('users', 'tab', 'role'));
     }
 
     // Hiển thị danh sách người dùng
     public function users(Request $request)
     {
-    $role = 'user';
-    $users = User::where('role', $role)->orderByDesc('id')->paginate(10);
-    $tab = 'users';
-    return view('admin.users.index', compact('users', 'tab', 'role'));
+        $role = 'user';
+        $query = User::where('role', $role);
+        if ($search = $request->get('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                  ->orWhere('email', 'like', "%$search%") ;
+            });
+        }
+        $users = $query->orderByDesc('id')->paginate(10);
+        $tab = 'users';
+        return view('admin.users.index', compact('users', 'tab', 'role'));
     }
     public function index(Request $request)
     {
@@ -75,5 +89,34 @@ class UsersController extends Controller
     {
         $user->delete();
         return response()->json(['success' => true]);
+    }
+    // Xuất danh sách tài khoản ra Excel
+    public function export(Request $request)
+    {
+        $query = User::query();
+        if ($role = $request->get('role')) {
+            $query->where('role', $role);
+        }
+        if ($search = $request->get('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                  ->orWhere('email', 'like', "%$search%") ;
+            });
+        }
+        $users = $query->orderByDesc('id')->get();
+
+        // Chuẩn bị dữ liệu cho Excel
+        $data = $users->map(function($user) {
+            return [
+                'ID' => $user->id,
+                'Tên' => $user->name,
+                'Email' => $user->email,
+                'Vai trò' => $user->role,
+                'Ngày tạo' => $user->created_at->format('d/m/Y H:i'),
+            ];
+        });
+
+        // Xuất file Excel
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\GenericArrayExport($data->toArray(), 'Danh sách tài khoản'), 'users.xlsx');
     }
 }

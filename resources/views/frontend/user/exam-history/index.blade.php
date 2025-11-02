@@ -43,8 +43,8 @@
                                     @else
                                         <span class="text-sm text-red-500">Chưa nộp bài</span>
                                     @endif
-                                    <span class="text-sm text-gray-700">Đúng: <span class="font-semibold">{{ $attempt->correct_answers }}/{{ $attempt->exam->total_questions }}</span></span>
-                                    <span class="text-sm text-blue-600 font-bold">{{ $attempt->correct_answers }} điểm</span>
+                                    <span class="text-sm text-gray-700">Đúng: <span class="font-semibold">{{ $attempt->score ?? 0 }}/{{ $attempt->exam->total_questions }}</span></span>
+                                    <span class="text-sm text-blue-600 font-bold">{{ $attempt->score ?? 0 }} điểm</span>
                                     <a href="{{ route('exam-history.show', $attempt) }}" class="ml-4 inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50">
                                         Xem chi tiết
                                     </a>
@@ -54,7 +54,7 @@
                     @endforeach
                 </ul>
                 <div class="px-4 py-3 border-t border-gray-200">
-                    {{ $attempts->links() }}
+                    {{ $attempts->appends(request()->except('page'))->links() }}
                 </div>
             </div>
         @elseif($attempts->isEmpty())

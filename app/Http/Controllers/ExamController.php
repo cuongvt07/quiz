@@ -29,6 +29,7 @@ class ExamController extends Controller
     {
         try {
             $subject_id = $request->get('subject_id');
+            $search = $request->get('search');
             $subjects = Subject::where('type', Subject::TYPE_COMPETENCY)->orderBy('name')->get();
 
             $query = Exam::with('subject')->whereHas('subject', function ($q) {
@@ -37,6 +38,14 @@ class ExamController extends Controller
 
             if ($subject_id) {
                 $query->where('subject_id', $subject_id);
+            }
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('title', 'like', "%$search%")
+                      ->orWhereHas('subject', function($q2) use ($search) {
+                          $q2->where('name', 'like', "%$search%") ;
+                      });
+                });
             }
 
             $exams = $query->orderByDesc('id')->paginate(10);
@@ -51,6 +60,7 @@ class ExamController extends Controller
     {
         try {
             $subject_id = $request->get('subject_id');
+            $search = $request->get('search');
             $subjects = Subject::where('type', Subject::TYPE_COGNITIVE)->orderBy('name')->get();
 
             $query = Exam::with('subject')->whereHas('subject', function ($q) {
@@ -59,6 +69,14 @@ class ExamController extends Controller
 
             if ($subject_id) {
                 $query->where('subject_id', $subject_id);
+            }
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('title', 'like', "%$search%")
+                      ->orWhereHas('subject', function($q2) use ($search) {
+                          $q2->where('name', 'like', "%$search%") ;
+                      });
+                });
             }
 
             $exams = $query->orderByDesc('id')->paginate(10);
@@ -73,11 +91,20 @@ class ExamController extends Controller
     {
         try {
             $subject_id = $request->get('subject_id');
+            $search = $request->get('search');
             $subjects = Subject::orderBy('name')->get();
             $query = Exam::with('subject');
 
             if ($subject_id) {
                 $query->where('subject_id', $subject_id);
+            }
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('title', 'like', "%$search%")
+                      ->orWhereHas('subject', function($q2) use ($search) {
+                          $q2->where('name', 'like', "%$search%") ;
+                      });
+                });
             }
 
             $exams = $query->orderByDesc('id')->paginate(10);
@@ -389,5 +416,42 @@ class ExamController extends Controller
             ]);
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+    // Xuất danh sách đề thi ra Excel
+    public function export(Request $request)
+    {
+        $query = Exam::with('subject');
+        if ($type = $request->get('type')) {
+            if ($type === 'nang_luc') {
+                $query->whereHas('subject', function($q) { $q->where('type', 'nang_luc'); });
+            } elseif ($type === 'tu_duy') {
+                $query->whereHas('subject', function($q) { $q->where('type', 'tu_duy'); });
+            }
+        }
+        if ($search = $request->get('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%$search%")
+                  ->orWhereHas('subject', function($q2) use ($search) {
+                      $q2->where('name', 'like', "%$search%") ;
+                  });
+            });
+        }
+        $exams = $query->orderByDesc('id')->get();
+
+        // Chuẩn bị dữ liệu cho Excel
+        $data = $exams->map(function($exam) {
+            return [
+                'ID' => $exam->id,
+                'Tên đề thi' => $exam->title,
+                'Môn học' => $exam->subject->name ?? '',
+                'Loại' => $exam->subject->type ?? '',
+                'Thời gian (phút)' => $exam->duration_minutes,
+                'Số câu hỏi' => $exam->total_questions,
+                'Ngày tạo' => $exam->created_at->format('d/m/Y H:i'),
+            ];
+        });
+
+        // Xuất file Excel
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\GenericArrayExport($data->toArray(), 'Danh sách đề thi'), 'exams.xlsx');
     }
 }

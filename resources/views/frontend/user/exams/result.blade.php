@@ -20,9 +20,23 @@
             <!-- Thông tin chi tiết -->
             <div class="p-6">
                 <!-- Score Circle -->
+                @php
+                    $total = $attempt->exam->total_questions;
+                    $correct = isset($correctCount) ? $correctCount : $attempt->correct_count;
+                    $wrong = isset($wrongCount) ? $wrongCount : $attempt->wrong_count;
+                    $unanswered = isset($unansweredCount) ? $unansweredCount : ($total - $correct - $wrong);
+                    $radius = 56;
+                    $circumference = 2 * pi() * $radius;
+                    $correctPercent = $total > 0 ? $correct / $total : 0;
+                    $wrongPercent = $total > 0 ? $wrong / $total : 0;
+                    $unansweredPercent = $total > 0 ? $unanswered / $total : 0;
+                    $correctOffset = 0;
+                    $wrongOffset = $circumference * (1 - $correctPercent);
+                    $unansweredOffset = $circumference * (1 - $correctPercent - $wrongPercent);
+                @endphp
                 <div class="flex justify-center mb-8">
                     <div class="relative">
-                        <svg class="w-32 h-32">
+                        <svg class="w-32 h-32" width="128" height="128">
                             <circle
                                 class="text-gray-200"
                                 stroke-width="10"
@@ -32,16 +46,45 @@
                                 cx="64"
                                 cy="64"
                             />
+                            <!-- Correct -->
+                            @if($correct > 0)
                             <circle
-                                class="text-blue-600"
+                                class="text-green-500"
                                 stroke-width="10"
                                 stroke="currentColor"
                                 fill="transparent"
                                 r="56"
                                 cx="64"
                                 cy="64"
-                                style="stroke-dasharray: {{ 2 * pi() * 56 }}; stroke-dashoffset: {{ 2 * pi() * 56 * (1 - ($attempt->correct_count / $attempt->exam->total_questions)) }};"
+                                style="stroke-dasharray: {{ $circumference * $correctPercent }}, {{ $circumference }}; stroke-dashoffset: {{ $wrongOffset }}; stroke-linecap: round;"
                             />
+                            @endif
+                            <!-- Wrong -->
+                            @if($wrong > 0)
+                            <circle
+                                class="text-red-500"
+                                stroke-width="10"
+                                stroke="currentColor"
+                                fill="transparent"
+                                r="56"
+                                cx="64"
+                                cy="64"
+                                style="stroke-dasharray: {{ $circumference * $wrongPercent }}, {{ $circumference }}; stroke-dashoffset: {{ $unansweredOffset }}; stroke-linecap: round;"
+                            />
+                            @endif
+                            <!-- Unanswered -->
+                            @if($unanswered > 0)
+                            <circle
+                                class="text-gray-400"
+                                stroke-width="10"
+                                stroke="currentColor"
+                                fill="transparent"
+                                r="56"
+                                cx="64"
+                                cy="64"
+                                style="stroke-dasharray: {{ $circumference * $unansweredPercent }}, {{ $circumference }}; stroke-dashoffset: 0; stroke-linecap: round;"
+                            />
+                            @endif
                         </svg>
                         <div class="absolute inset-0 flex items-center justify-center">
                             <div class="text-center">
@@ -55,17 +98,25 @@
                 </div>
 
                 <!-- Statistics Grid -->
-                <div class="grid grid-cols-2 gap-6 mb-8">
+                <div class="grid grid-cols-3 gap-6 mb-8">
                     <!-- Số câu đúng -->
                     <div class="text-center p-4 bg-green-50 rounded-lg">
-                        <span class="text-2xl font-bold text-green-600">{{ $attempt->correct_count }}</span>
+                        <span class="text-2xl font-bold text-green-600">{{ $correct }}</span>
                         <p class="text-sm text-green-700 mt-1">Câu đúng</p>
                     </div>
 
                     <!-- Số câu sai -->
                     <div class="text-center p-4 bg-red-50 rounded-lg">
-                        <span class="text-2xl font-bold text-red-600">{{ $attempt->wrong_count }}</span>
+                        <span class="text-2xl font-bold text-red-600">{{ $wrong }}</span>
                         <p class="text-sm text-red-700 mt-1">Câu sai</p>
+                    </div>
+
+                    <!-- Số câu chưa trả lời -->
+                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                        <span class="text-2xl font-bold text-gray-600">
+                            {{ $unanswered }}
+                        </span>
+                        <p class="text-sm text-gray-700 mt-1">Chưa trả lời</p>
                     </div>
                 </div>
 
@@ -81,7 +132,22 @@
                     </div>
                     <div class="flex justify-between items-center">
                         <span>Tổng thời gian làm bài:</span>
-                        <span class="font-medium">{{ $attempt->duration_in_minutes }} phút</span>
+                        <span class="font-medium">
+                            @php
+                                $start = \Carbon\Carbon::parse($attempt->started_at);
+                                $end = \Carbon\Carbon::parse($attempt->finished_at);
+                                $diff = $end->diffInSeconds($start);
+                                $minutes = floor($diff / 60);
+                                $seconds = $diff % 60;
+                            @endphp
+                            @if($minutes > 0 && $seconds > 0)
+                                {{ $minutes }} phút {{ $seconds }} giây
+                            @elseif($minutes > 0)
+                                {{ $minutes }} phút
+                            @else
+                                {{ $seconds }} giây
+                            @endif
+                        </span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span>Loại lượt thi:</span>
@@ -194,46 +260,54 @@
                 <div class="border border-gray-200 rounded-lg p-5 
                     {{ $result['is_correct'] ? 'bg-green-50 border-green-200' : 
                         ($result['user_answer'] ? 'bg-red-50 border-red-200' : 'bg-gray-50') }}">
-                    
                     {{-- Header --}}
                     <div class="flex items-start justify-between mb-4">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-3 mb-2">
-                                <span class="px-3 py-1 bg-white rounded-full text-sm font-semibold text-gray-700 shadow-sm">
-                                    Câu {{ $index + 1 }}
+                        <div class="flex-1 flex items-center gap-3 mb-2">
+                            <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium
+                                {{ $result['is_correct'] ? 'bg-green-500 text-white' : ($result['user_answer'] ? 'bg-red-500 text-white' : 'bg-gray-300 text-gray-700') }}">
+                                {{ $index + 1 }}
+                            </span>
+                            <span class="px-3 py-1 bg-white rounded-full text-sm font-semibold text-gray-700 shadow-sm">
+                                Câu {{ $index + 1 }}
+                            </span>
+                            @if($result['is_correct'])
+                                <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium flex items-center gap-1">
+                                    ✅ Đúng
                                 </span>
-                                @if($result['is_correct'])
-                                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium flex items-center gap-1">
-                                        ✅ Đúng
-                                    </span>
-                                @elseif($result['user_answer'])
-                                    <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium flex items-center gap-1">
-                                        ❌ Sai
-                                    </span>
-                                @else
-                                    <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium flex items-center gap-1">
-                                        ⏸️ Chưa trả lời
-                                    </span>
-                                @endif
-                            </div>
-                            <p class="text-gray-800 font-medium text-lg">{{ $result['question']->question }}</p>
+                            @elseif($result['user_answer'])
+                                <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium flex items-center gap-1">
+                                    ❌ Sai
+                                </span>
+                            @else
+                                <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium flex items-center gap-1">
+                                    ⏸️ Chưa trả lời
+                                </span>
+                            @endif
                         </div>
                     </div>
+                    <p class="text-gray-800 font-medium text-lg">{{ $result['question']->question }}</p>
 
                     {{-- Danh sách đáp án --}}
                     <div class="space-y-3 ml-4">
                         @foreach($result['question']->questionChoices as $choice)
+                            @php
+                                // Determine state for this choice: correct, wrong, or unanswered
+                                $isCorrect = $choice->id === $result['correct_choice']?->id;
+                                $isUserWrong = $result['user_answer'] && $choice->id === $result['user_answer']->id && !$result['is_correct'];
+                                $isUnanswered = !$result['user_answer'] && !$isCorrect;
+                            @endphp
                             <div class="flex flex-col p-3 rounded-lg transition
-                                {{ $choice->id === $result['correct_choice']?->id ? 'bg-green-100 border-2 border-green-400' : '' }}
-                                {{ $result['user_answer'] && $choice->id === $result['user_answer']->id && !$result['is_correct'] ? 'bg-red-100 border-2 border-red-400' : '' }}
-                                {{ $choice->id !== $result['correct_choice']?->id && (!$result['user_answer'] || $choice->id !== $result['user_answer']->id) ? 'bg-white border border-gray-200' : '' }}">
-                                
+                                {{ $isCorrect ? 'bg-green-100 border-2 border-green-400' : '' }}
+                                {{ $isUserWrong ? 'bg-red-100 border-2 border-red-400' : '' }}
+                                {{ $isUnanswered ? 'bg-gray-50 border border-gray-200' : '' }}
+                                {{ !$isCorrect && !$isUserWrong && !$isUnanswered ? 'bg-white border border-gray-200' : '' }}">
                                 <div class="flex items-start gap-3">
                                     {{-- Ký hiệu A/B/C --}}
                                     <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full font-semibold text-sm
-                                        {{ $choice->id === $result['correct_choice']?->id ? 'bg-green-500 text-white' : '' }}
-                                        {{ $result['user_answer'] && $choice->id === $result['user_answer']->id && !$result['is_correct'] ? 'bg-red-500 text-white' : '' }}
-                                        {{ $choice->id !== $result['correct_choice']?->id && (!$result['user_answer'] || $choice->id !== $result['user_answer']->id) ? 'bg-gray-300 text-gray-700' : '' }}">
+                                        {{ $isCorrect ? 'bg-green-500 text-white' : '' }}
+                                        {{ $isUserWrong ? 'bg-red-500 text-white' : '' }}
+                                        {{ $isUnanswered ? 'bg-gray-300 text-gray-700' : '' }}
+                                        {{ !$isCorrect && !$isUserWrong && !$isUnanswered ? 'bg-gray-300 text-gray-700' : '' }}">
                                         {{ chr(65 + $loop->index) }}
                                     </span>
 
@@ -244,11 +318,14 @@
 
                                     {{-- Đánh dấu --}}
                                     <div class="flex-shrink-0 flex items-center gap-2">
-                                        @if($choice->id === $result['correct_choice']?->id)
+                                        @if($isCorrect)
                                             <span class="text-green-600 text-sm font-medium">Đáp án đúng</span>
                                         @endif
                                         @if($result['user_answer'] && $choice->id === $result['user_answer']->id)
                                             <span class="text-blue-600 text-sm font-medium">Bạn chọn</span>
+                                        @endif
+                                        @if($isUnanswered)
+                                            <span class="text-gray-500 text-sm font-medium">Chưa trả lời</span>
                                         @endif
                                     </div>
                                 </div>
