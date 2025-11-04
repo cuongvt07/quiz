@@ -118,8 +118,9 @@
 
 <!-- Payment Modal -->
 <div x-data="{ show: false, plan: null }" 
-     x-show="show" 
-     x-on:payment-modal.window="show = true; plan = $event.detail"
+    x-show="show" 
+    x-on:payment-modal.window="show = true; plan = $event.detail"
+    x-on:payment-modal-close.window="show = false"
      class="fixed inset-0 overflow-y-auto z-50"
      x-cloak>
     <!-- Background overlay -->
@@ -168,16 +169,35 @@
                 </div>
 
                 <!-- QR Code -->
-                <div class="flex justify-center mb-6">
-                    <div id="qrcode" class="bg-white p-4 rounded-xl shadow-inner"></div>
-                </div>
+                                <div class="flex flex-col items-center mb-6">
+                                    <div id="qrcode" class="bg-white p-4 rounded-xl shadow-inner mb-4"></div>
 
-                <!-- Instructions -->
-                <div class="text-sm text-gray-500">
-                    <p class="mb-2">1. Quét mã QR bằng ứng dụng ngân hàng của bạn</p>
-                    <p class="mb-2">2. Kiểm tra thông tin chuyển khoản</p>
-                    <p>3. Xác nhận và hoàn tất giao dịch</p>
-                </div>
+                                    <!-- Payment summary line -->
+                                    <div id="payment-summary" class="text-center mb-3 text-gray-700">
+                                        Thanh toán gói: <strong id="payment-plan-name" class="text-gray-900"></strong>
+                                    </div>
+
+                                    <!-- Countdown / loading -->
+                                    <div id="qr-timer-container" class="flex items-center gap-3 text-sm text-gray-600 mb-3">
+                                        <svg id="qr-spinner" style="display: none;" class="w-5 h-5 animate-spin text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                        </svg>
+                                        <div>Đang chờ thanh toán — thời gian còn lại: <span id="qr-timer">20</span>s</div>
+                                    </div>
+
+                                    <!-- Confirm payment button -->
+                                    <div class="w-full max-w-xs">
+                                        <button id="confirmPaymentBtn" type="button" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Xác nhận chuyển khoản</button>
+                                    </div>
+                                </div>
+
+                                <!-- Instructions -->
+                                <div class="text-sm text-gray-500">
+                                    <p class="mb-2">1. Quét mã QR bằng ứng dụng ngân hàng của bạn</p>
+                                    <p class="mb-2">2. Kiểm tra thông tin chuyển khoản</p>
+                                    <p>3. Xác nhận và hoàn tất giao dịch</p>
+                                </div>
             </div>
         </div>
     </div>
@@ -249,10 +269,128 @@ async function showPaymentModal(planId) {
         window.dispatchEvent(new CustomEvent('payment-modal', {
             detail: modalData
         }));
+        // Start 20s QR countdown
+        startQrCountdown(20, modalData.name);
     } catch (error) {
         console.error('Error:', error);
         alert('Có lỗi xảy ra khi tạo mã QR: ' + error.message);
     }
+}
+
+let qrCountdownInterval = null;
+function startQrCountdown(seconds, planName) {
+    // Set plan name in modal
+    document.getElementById('payment-plan-name').textContent = planName || '';
+
+    // Reset timer UI
+    const timerEl = document.getElementById('qr-timer');
+    const spinner = document.getElementById('qr-spinner');
+    const confirmBtn = document.getElementById('confirmPaymentBtn');
+    if (timerEl) timerEl.textContent = seconds;
+    if (spinner) spinner.style.display = 'inline-block';
+    if (confirmBtn) confirmBtn.disabled = false;
+
+    if (qrCountdownInterval) clearInterval(qrCountdownInterval);
+
+    let remaining = seconds;
+    qrCountdownInterval = setInterval(() => {
+        remaining -= 1;
+        if (timerEl) timerEl.textContent = remaining;
+        if (remaining <= 0) {
+            clearInterval(qrCountdownInterval);
+            if (spinner) spinner.style.display = 'none';
+            if (confirmBtn) confirmBtn.disabled = true;
+            // Notify timeout
+            if (window.showNotification) {
+                showNotification('Hết thời gian giao dịch', 'error');
+            } else {
+                alert('Hết thời gian giao dịch');
+            }
+        }
+    }, 1000);
+}
+
+// Confirm payment button handler
+document.addEventListener('click', function (e) {
+    if (e.target && e.target.id === 'confirmPaymentBtn') {
+        if (qrCountdownInterval) { clearInterval(qrCountdownInterval); qrCountdownInterval = null; }
+
+        const confirmBtn = document.getElementById('confirmPaymentBtn');
+        if (confirmBtn) confirmBtn.disabled = true;
+
+        const message = 'Thanh toán thành công. Gói đã được đăng ký.';
+        const duration = 5000; // 5 seconds
+
+        // Use global notification if available
+        if (window.showNotification) {
+            try {
+                // Some showNotification implementations accept (message, type, options)
+                showNotification(message, 'success', { timeout: duration });
+            } catch (err) {
+                // fallback to calling with two args
+                showNotification(message, 'success');
+            }
+        }
+
+        // Ensure user always sees a toast (inline fallback)
+        createInlineToast(message, 'success', duration);
+
+        // Hide spinner while confirming
+        const spinner = document.getElementById('qr-spinner');
+        if (spinner) spinner.style.display = 'none';
+
+        // Close modal after toast duration
+        setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('payment-modal-close'));
+            if (confirmBtn) confirmBtn.disabled = false;
+        }, duration);
+    }
+});
+
+/**
+ * Minimal inline toast fallback when no global toast exists.
+ * Creates a small stacked toast container at bottom-right and auto-removes after duration.
+ */
+function createInlineToast(message, type = 'info', duration = 5000) {
+    const containerId = 'inline-toast-container';
+    let container = document.getElementById(containerId);
+    if (!container) {
+        container = document.createElement('div');
+        container.id = containerId;
+        container.style.position = 'fixed';
+        container.style.right = '20px';
+        container.style.bottom = '20px';
+        container.style.zIndex = 99999;
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.background = type === 'success' ? '#16a34a' : (type === 'error' ? '#dc2626' : '#111827');
+    toast.style.color = '#fff';
+    toast.style.padding = '12px 16px';
+    toast.style.marginTop = '8px';
+    toast.style.borderRadius = '8px';
+    toast.style.boxShadow = '0 6px 18px rgba(0,0,0,0.12)';
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(8px)';
+    toast.style.transition = 'opacity 200ms ease, transform 200ms ease';
+
+    container.appendChild(toast);
+    // Trigger enter animation
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+    });
+
+    // Remove after duration
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px)';
+        setTimeout(() => toast.remove(), 220);
+    }, duration);
+
+    return toast;
 }
 </script>
 @endpush
