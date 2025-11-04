@@ -3,17 +3,27 @@
 @section('content')
 <div class="flex items-center justify-between mb-4">
     <h1 class="text-2xl font-bold">Quản lý tài khoản</h1>
-    <div>
+    <div class="flex gap-2">
+        <a href="{{ route('admin.accounts.export', array_filter(['role' => $role ?? null, 'search' => request('search')])) }}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center">
+            <i data-feather="download" class="mr-2"></i> Xuất Excel
+        </a>
         <button id="btnAddUser" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center">
             <i data-feather="plus" class="mr-2"></i> Thêm tài khoản
         </button>
     </div>
 </div>
 <div class="mb-4">
-    <div class="flex gap-2 border-b">
+    <div class="flex gap-2 border-b mb-2">
         <a href="{{ route('admin.accounts.admins') }}" class="px-4 py-2 -mb-px border-b-2 {{ (isset($tab) && $tab=='admins') ? 'border-blue-600 text-blue-700 font-bold' : 'border-transparent text-gray-600' }}">Quản trị viên</a>
         <a href="{{ route('admin.accounts.users') }}" class="px-4 py-2 -mb-px border-b-2 {{ (isset($tab) && $tab=='users') ? 'border-blue-600 text-blue-700 font-bold' : 'border-transparent text-gray-600' }}">Người dùng</a>
     </div>
+    <form method="GET" action="" class="flex gap-2 items-center" id="filterForm">
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Tìm tên hoặc email..." class="border rounded px-3 py-2 w-64" />
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Tìm kiếm</button>
+        @if(request('search'))
+            <a href="{{ url()->current() }}" class="text-gray-500 ml-2">Xóa lọc</a>
+        @endif
+    </form>
 </div>
 <div class="overflow-x-auto bg-white rounded shadow">
     <table class="min-w-full divide-y divide-gray-200">
@@ -43,7 +53,7 @@
             @endforeach
         </tbody>
     </table>
-    <div class="p-4">{!! $users->appends(['role'=>$role])->links() !!}</div>
+    <div class="p-4">{!! $users->appends(request()->except('page'))->links() !!}</div>
 </div>
 
 <!-- Modal User Form -->

@@ -16,9 +16,12 @@ $type = request()->routeIs('admin.exams.nangluc') ? 'nang_luc' : (request()->rou
         @endif
     </h1>
 </div>
-<x-admin.filter>
-    {{-- Có thể thêm select, filter khác ở đây nếu cần --}}
-</x-admin.filter>
+<div class="flex flex-wrap gap-2 items-center mb-2">
+    <x-admin.filter />
+    <a href="{{ route('admin.exams.export', array_filter(['type' => $type !== 'all' ? $type : null, 'search' => request('search')])) }}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center ml-2">
+        <i data-feather="download" class="mr-2"></i> Xuất Excel
+    </a>
+</div>
 @if(session('success'))
     <div class="mb-3 p-2 bg-green-100 text-green-700 rounded">{{ session('success') }}</div>
 @endif
@@ -127,7 +130,7 @@ $type = request()->routeIs('admin.exams.nangluc') ? 'nang_luc' : (request()->rou
         @endif
     @endforeach
 </x-admin.table>
-<div class="mt-4">{{ $exams->withQueryString()->links() }}</div>
+<div class="mt-4">{{ $exams->appends(request()->except('page'))->links() }}</div>
 <script>
 if(window.feather) feather.replace();
 </script>

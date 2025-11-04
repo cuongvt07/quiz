@@ -98,10 +98,10 @@
                                                         @csrf
                                                         <button type="submit"
                                                                 class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-full transition-colors group relative"
-                                                                title="Tái đăng ký gói này">
+                                                                title=" Mua mới gói này">
                                                             <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                                                             <span class="absolute hidden group-hover:block bg-gray-900 text-white text-xs rounded py-1 px-2 right-0 bottom-full mb-2 whitespace-nowrap">
-                                                                Tái đăng ký: +{{ $s->plan->attempts }} lượt, +{{ $s->plan->duration_days }} ngày
+                                                                    Mua mới: +{{ $s->plan->attempts }} lượt, +{{ $s->plan->duration_days }} ngày
                                                             </span>
                                                         </button>
                                                     </form>
