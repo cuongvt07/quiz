@@ -3,6 +3,7 @@
 @push('styles')
 <!-- Select2 CSS local -->
 <link href="{{ asset('css/select2.min.css') }}" rel="stylesheet" />
+
 <style>
     /* Minimal style: Chỉ cơ bản để tránh overlap và fit width */
     .select2-container {
@@ -41,8 +42,6 @@
     }
 </style>
 @endpush
-
-@extends('layouts.admin')
 
 @section('content')
 @php
