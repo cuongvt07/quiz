@@ -134,7 +134,7 @@ $plansJson = json_encode($plans->mapWithKeys(function($plan) {
                             Ngày kết thúc <span class="text-red-500">*</span>
                         </label>
                         <input type="date" name="end_date" id="end_date" required value="{{ old('end_date') }}"
-                               class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 text-sm px-3 py-2" readonly>
+                               class="w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 text-sm px-3 py-2">
                         @error('end_date')
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
