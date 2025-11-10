@@ -234,7 +234,7 @@ async function showPaymentModal(planId) {
             bankBin: VietnamQRPay.BanksObject[bankInfo.bankBin].bin,
             bankNumber: bankInfo.bankNumber,
             amount: bankInfo.amount.replace(/[^0-9]/g, ''), // Remove non-numeric characters
-            purpose: bankInfo.purpose
+            purpose: "123"
         });
         
         const qrData = qrPay.build();
