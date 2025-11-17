@@ -40,6 +40,9 @@
         @stack('modals')
         @stack('scripts')
 
+        <!-- Chatbot Component -->
+        @livewire('chatbot')
+
         @livewireScripts
     </body>
 </html>
