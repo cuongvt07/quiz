@@ -7,8 +7,12 @@ use App\Models\Subject;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use App\Models\Question;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ActiveExamsExport;
+use App\Exports\ExamSummaryExport;
 use App\Imports\QuestionsImport;
 use App\Services\QuestionImportService;
 
@@ -417,41 +421,80 @@ class ExamController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
     // Xuất danh sách đề thi ra Excel
     public function export(Request $request)
     {
         $query = Exam::with('subject');
+
+        // Lọc loại bài thi
         if ($type = $request->get('type')) {
-            if ($type === 'nang_luc') {
-                $query->whereHas('subject', function($q) { $q->where('type', 'nang_luc'); });
-            } elseif ($type === 'tu_duy') {
-                $query->whereHas('subject', function($q) { $q->where('type', 'tu_duy'); });
-            }
+            $query->whereHas('subject', fn($q) => $q->where('type', $type));
         }
+
+        // Search
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%$search%")
-                  ->orWhereHas('subject', function($q2) use ($search) {
-                      $q2->where('name', 'like', "%$search%") ;
-                  });
+                    ->orWhereHas('subject', fn($q2) => $q2->where('name', 'like', "%$search%"));
             });
         }
+
         $exams = $query->orderByDesc('id')->get();
 
-        // Chuẩn bị dữ liệu cho Excel
-        $data = $exams->map(function($exam) {
+        // Chuẩn bị dữ liệu
+        $rows = $exams->map(function ($exam) {
             return [
-                'ID' => $exam->id,
-                'Tên đề thi' => $exam->title,
-                'Môn học' => $exam->subject->name ?? '',
-                'Loại' => $exam->subject->type ?? '',
-                'Thời gian (phút)' => $exam->duration_minutes,
-                'Số câu hỏi' => $exam->total_questions,
-                'Ngày tạo' => $exam->created_at->format('d/m/Y H:i'),
+                'type_name'       => $exam->subject->type_name ?? '',
+                'subject_name'    => $exam->subject->name ?? '',
+                'id'              => $exam->id,
+                'title'           => $exam->title,
+                'students_count'  => $exam->attempts()->distinct('user_id')->count(),
+                'total_attempts'  => $exam->attempts()->count(),
+                'avg_score'       => $exam->attempts()->avg('score') ? round($exam->attempts()->avg('score'), 1) . '/' . $exam->total_questions : '0/' . $exam->total_questions,
+                'max_score'       => $exam->attempts()->max('score') ?? 0,
             ];
         });
 
-        // Xuất file Excel
-        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\GenericArrayExport($data->toArray(), 'Danh sách đề thi'), 'exams.xlsx');
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ExamReportExport($rows->toArray()),
+            'bao_cao_bai_thi.xlsx'
+        );
+    }
+
+    public function exportActive(Request $request)
+    {
+        // Determine date range via start/end or month/year params
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        $month = $request->get('month');
+        $year = $request->get('year');
+
+        if ($startDate) {
+            $start = Carbon::parse($startDate)->startOfDay();
+            $end = $endDate ? Carbon::parse($endDate)->endOfDay() : Carbon::parse($startDate)->endOfDay();
+            $periodLabel = sprintf('%s - %s', $start->format('d/m/Y'), $end->format('d/m/Y'));
+        } elseif ($month && $year) {
+            $start = Carbon::createFromDate((int)$year, (int)$month, 1)->startOfDay();
+            $end = (clone $start)->endOfMonth()->endOfDay();
+            $periodLabel = sprintf('Tháng %d/%d', (int)$month, (int)$year);
+        } else {
+            $start = Carbon::now()->startOfMonth();
+            $end = Carbon::now()->endOfMonth();
+            $periodLabel = sprintf('Tháng %d/%d', $start->format('m'), $start->format('Y'));
+        }
+
+        $exams = Exam::whereBetween('created_at', [$start, $end])->orderBy('id')->get();
+
+        $rows = $exams->map(function($exam) {
+            return [
+                'id' => $exam->id,
+                'title' => $exam->title,
+                'total_questions' => $exam->total_questions,
+                'duration_minutes' => $exam->duration_minutes,
+            ];
+        })->toArray();
+
+        $fileName = sprintf('danh_sach_bai_thi_dang_hoat_dong_%s.xlsx', now()->format('Ymd'));
+        return Excel::download(new ActiveExamsExport($rows, $periodLabel), $fileName);
     }
 }

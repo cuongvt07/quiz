@@ -35,6 +35,12 @@
         ->map(fn($s) => optional($s->subscriptionPlan)->name ?? ('Gói #' . $s->plan_id))
         ->values();
     $subTotals = collect($topSubscriptions)->pluck('total')->map(fn($v)=> (int)$v)->values();
+
+    // Export date defaults: use request's start/end date if provided, otherwise fallback to the page defaults
+    $exportStartDate = request('start_date', $startDate->format('Y-m-d'));
+    $exportEndDate = request('end_date', $endDate->format('Y-m-d'));
+    $exportMonth = (int) (request('month') ?? \Carbon\Carbon::parse($exportStartDate)->month);
+    $exportYear = (int) (request('year') ?? \Carbon\Carbon::parse($exportStartDate)->year);
 @endphp
 
 <div class="min-h-screen bg-gray-100 p-6 font-sans"> <!-- Nền xám nhạt hiện đại -->
@@ -147,7 +153,7 @@
         
         {{-- Revenue Reports Tablist --}}
         <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-            <div class="bg-gray-50 p-8 border-b border-gray-200">
+            <div class="bg-gray-50 p-8 border-b border-gray-200 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-green-600 shadow-lg">
                         <svg class="w-5 h-5 text-white" fill="white" data-feather="dollar-sign"></svg>
@@ -157,6 +163,18 @@
                         <p class="text-xs text-gray-600 font-medium">Thống kê doanh thu từ đăng ký gói</p>
                     </div>
                 </div>
+                <form method="GET" action="{{ route('admin.subscriptions.export') }}" class="flex gap-2 items-center">
+                    <select name="month" class="border rounded px-2 py-1 text-sm">
+                        @for($m = 1; $m <= 12; $m++)
+                            <option value="{{ $m }}" {{ $m == $exportMonth ? 'selected' : '' }}>{{ $m }}</option>
+                        @endfor
+                    </select>
+                    <input type="number" name="year" min="2000" max="2100" value="{{ $exportYear }}" class="border rounded px-2 py-1 w-24 text-sm" />
+                    <!-- Note: We only send month/year for this export (no start/end) -->
+                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 inline-flex items-center gap-2">
+                         Xuất báo cáo
+                    </button>
+                </form>
             </div>
 
             <div class="p-8" x-data="{ activeTab: 'daily' }">
@@ -385,17 +403,46 @@
 
             {{-- Exam Types --}}
             <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-200">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg">
-                        <svg class="w-5 h-5 text-white" fill="white" data-feather="pie-chart"></svg> <!-- Icon trắng -->
+
+                <!-- HEADER: ICON + TIÊU ĐỀ + FORM EXPORT -->
+                <div class="flex items-center justify-between mb-6">
+
+                    <!-- BÊN TRÁI -->
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg">
+                            <svg class="w-5 h-5 text-white" fill="white" data-feather="pie-chart"></svg>
+                        </div>
+
+                        <div>
+                            <h2 class="text-lg font-bold text-black">Phân Loại Bài Thi</h2>
+                            <p class="text-xs text-gray-600 font-medium">Theo loại bài thi</p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 class="text-lg font-bold text-black">Phân Loại Bài Thi</h2> <!-- Text đen -->
-                        <p class="text-xs text-gray-600 font-medium">Theo loại bài thi</p> <!-- Text xám phụ -->
-                    </div>
+
+                    <!-- BÊN PHẢI (FORM EXPORT) -->
+                <form method="GET" action="{{ route('admin.exams.export-active') }}" class="inline-flex items-center gap-2">
+                    <select name="month" class="border rounded px-2 py-1 text-sm">
+                        @for($m = 1; $m <= 12; $m++)
+                            <option value="{{ $m }}" {{ $m == $exportMonth ? 'selected' : '' }}>{{ $m }}</option>
+                        @endfor
+                    </select>
+                    <input type="number" name="year" min="2000" max="2100" value="{{ $exportYear }}" class="border rounded px-2 py-1 w-24 text-sm" />
+                    <input type="hidden" name="start_date" value="{{ $exportStartDate }}" />
+                    <input type="hidden" name="end_date" value="{{ $exportEndDate }}" />
+                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 inline-flex items-center gap-2">
+                         Xuất báo cáo
+                    </button>
+                </form>
+
                 </div>
-                <div class="h-80"><canvas id="examTypesChart"></canvas></div>
+
+                <!-- BIỂU ĐỒ -->
+                <div class="h-80">
+                    <canvas id="examTypesChart"></canvas>
+                </div>
+
             </div>
+
 
             {{-- Top Subscriptions --}}
             <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-200">
@@ -414,7 +461,7 @@
 
         {{-- Top Users --}}
         <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-            <div class="bg-gray-50 p-8 border-b border-gray-200">
+            <div class="bg-gray-50 p-8 border-b border-gray-200 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
                         <svg class="w-5 h-5 text-white" fill="white" data-feather="users"></svg> <!-- Icon trắng -->
@@ -424,6 +471,19 @@
                         <p class="text-xs text-gray-600 font-medium">Những người tham gia tích cực</p> <!-- Text xám phụ -->
                     </div>
                 </div>
+                <form method="GET" action="{{ route('admin.subscriptions.export-users') }}" class="inline-flex items-center gap-2">
+                    <select name="month" class="border rounded px-2 py-1 text-sm">
+                        @for($m = 1; $m <= 12; $m++)
+                            <option value="{{ $m }}" {{ $m == $exportMonth ? 'selected' : '' }}>{{ $m }}</option>
+                        @endfor
+                    </select>
+                    <input type="number" name="year" min="2000" max="2100" value="{{ $exportYear }}" class="border rounded px-2 py-1 w-24 text-sm" />
+                    <input type="hidden" name="start_date" value="{{ $exportStartDate }}" />
+                    <input type="hidden" name="end_date" value="{{ $exportEndDate }}" />
+                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 inline-flex items-center gap-2">
+                         Xuất báo cáo
+                    </button>
+                </form>
             </div>
             <div class="p-8">
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
