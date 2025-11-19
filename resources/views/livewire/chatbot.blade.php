@@ -27,10 +27,10 @@
             <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center overflow-hidden">
-                        <img src="{{ asset('download.jpeg') }}" alt="HSA Assistane" class="w-full h-full object-cover">
+                        <img src="{{ asset('download.jpeg') }}" alt="HSA Assistant" class="w-full h-full object-cover">
                     </div>
                     <div>
-                        <h3 class="font-semibold text-lg">HSA Assistane</h3>
+                        <h3 class="font-semibold text-lg">HSA Assistant</h3>
                         <p class="text-xs text-blue-100">Online</p>
                     </div>
                 </div>
@@ -137,7 +137,7 @@
                             <div class="flex items-end space-x-2 max-w-[80%]">
                                 @if($msg['type'] === 'ai')
                                     <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center flex-shrink-0 overflow-hidden border-2 border-blue-600">
-                                        <img src="{{ asset('download.jpeg') }}" alt="HSA Assistane" class="w-full h-full object-cover">
+                                        <img src="{{ asset('download.jpeg') }}" alt="HSA Assistant" class="w-full h-full object-cover">
                                     </div>
                                 @endif
                                 
@@ -167,7 +167,7 @@
                     <div class="flex justify-start">
                         <div class="flex items-end space-x-2">
                             <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-blue-600">
-                                <img src="{{ asset('download.jpeg') }}" alt="HSA Assistane" class="w-full h-full object-cover">
+                                <img src="{{ asset('download.jpeg') }}" alt="HSA Assistant" class="w-full h-full object-cover">
                             </div>
                             <div class="bg-white px-4 py-3 rounded-2xl shadow-md">
                                 <div class="flex space-x-2">
