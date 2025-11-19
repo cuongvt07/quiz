@@ -99,8 +99,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Dashboard
     Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/export-exam-types', [\App\Http\Controllers\Admin\DashboardController::class, 'exportExamTypes'])->name('dashboard.export-exam-types');
 
     Route::get('/exams/export', [\App\Http\Controllers\ExamController::class, 'export'])->name('exams.export');
+    Route::get('/exams/export-active', [\App\Http\Controllers\ExamController::class, 'exportActive'])->name('exams.export-active');
 
     // Lịch sử thi
     Route::prefix('exam-attempts')->name('exam-attempts.')->group(function () {
@@ -120,6 +122,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Thành viên đăng ký gói
     Route::get('subscriptions', [\App\Http\Controllers\Admin\UserSubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::get('subscriptions/export', [\App\Http\Controllers\Admin\UserSubscriptionController::class, 'export'])->name('subscriptions.export');
+    Route::get('subscriptions/export-users', [\App\Http\Controllers\Admin\UserSubscriptionController::class, 'exportUsers'])->name('subscriptions.export-users');
     Route::get('subscriptions/create', [\App\Http\Controllers\Admin\UserSubscriptionController::class, 'create'])->name('subscriptions.create');
     Route::post('subscriptions', [\App\Http\Controllers\Admin\UserSubscriptionController::class, 'store'])->name('subscriptions.store');
     Route::get('subscriptions/{subscription}', [\App\Http\Controllers\Admin\UserSubscriptionController::class, 'show'])->name('subscriptions.show');
@@ -152,6 +156,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('accounts/admins', [\App\Http\Controllers\UsersController::class, 'admins'])->name('accounts.admins');
     Route::get('accounts/users', [\App\Http\Controllers\UsersController::class, 'users'])->name('accounts.users');
     Route::resource('users', \App\Http\Controllers\UsersController::class)->names('users');
+    Route::get('users/{user}/export-report', [\App\Http\Controllers\UsersController::class, 'exportReport'])->name('users.export-report');
     Route::post('admins', [\App\Http\Controllers\AdminAccountController::class, 'store'])->name('admins.store');
     Route::put('admins/{admin}', [\App\Http\Controllers\AdminAccountController::class, 'update'])->name('admins.update');
     Route::delete('admins/{admin}', [\App\Http\Controllers\AdminAccountController::class, 'destroy'])->name('admins.destroy');

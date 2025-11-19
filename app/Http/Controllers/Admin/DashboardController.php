@@ -7,11 +7,14 @@ use App\Models\User;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
 use App\Models\UserSubscription;
+use App\Models\Subject;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ExamTypeExport;
 
 class DashboardController extends Controller
 {
@@ -298,5 +301,35 @@ class DashboardController extends Controller
             'endDate',
             'revenueStats'
         ));
+    }
+
+    /**
+     * Export exam attempts by subject type for a month
+     */
+    public function exportExamTypes(Request $request)
+    {
+        $month = (int) ($request->get('month') ?? now()->month);
+        $year = (int) ($request->get('year') ?? now()->year);
+
+        $data = ExamAttempt::join('exams', 'exam_attempts.exam_id', '=', 'exams.id')
+            ->join('subjects', 'exams.subject_id', '=', 'subjects.id')
+            ->whereMonth('exam_attempts.created_at', $month)
+            ->whereYear('exam_attempts.created_at', $year)
+            ->select('subjects.type', DB::raw('COUNT(*) as total'))
+            ->groupBy('subjects.type')
+            ->get();
+
+        $types = [];
+        foreach (Subject::getTypes() as $typeKey => $typeName) {
+            $count = optional($data->firstWhere('type', $typeKey))->total ?? 0;
+            $types[] = [
+                'type' => $typeKey,
+                'type_name' => $typeName,
+                'count' => (int) $count,
+            ];
+        }
+
+        $fileName = sprintf('bao_cao_loai_bai_thi_%04d_%02d.xlsx', $year, $month);
+        return Excel::download(new ExamTypeExport($types, $month, $year), $fileName);
     }
 }

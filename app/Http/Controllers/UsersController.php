@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Models\ExamAttempt;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\UserExamSummaryExport;
+use Carbon\Carbon;
 
 class UsersController extends Controller
 {
@@ -118,5 +122,54 @@ class UsersController extends Controller
 
         // Xuất file Excel
         return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\GenericArrayExport($data->toArray(), 'Danh sách tài khoản'), 'users.xlsx');
+    }
+
+    // Xuất báo cáo kết quả thi của 1 người dùng
+    public function exportReport(Request $request, User $user)
+    {
+        // Optional: support month/year or start/end filter
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        $month = $request->get('month');
+        $year = $request->get('year');
+
+        if ($startDate) {
+            $start = Carbon::parse($startDate)->startOfDay();
+            $end = $endDate ? Carbon::parse($endDate)->endOfDay() : Carbon::parse($startDate)->endOfDay();
+            $periodLabel = sprintf('%s - %s', $start->format('d/m/Y'), $end->format('d/m/Y'));
+        } elseif ($month && $year) {
+            $start = Carbon::createFromDate((int)$year, (int)$month, 1)->startOfDay();
+            $end = (clone $start)->endOfMonth()->endOfDay();
+            $periodLabel = sprintf('Tháng %d/%d', (int)$month, (int)$year);
+        } else {
+            $start = null;
+            $end = null;
+            $periodLabel = '';
+        }
+
+        $query = ExamAttempt::where('user_id', $user->id)->whereNotNull('finished_at')->with('exam');
+        if ($start && $end) {
+            $query->whereBetween('started_at', [$start, $end]);
+        }
+        $attempts = $query->get();
+
+        $grouped = $attempts->groupBy('exam_id');
+
+        $rows = $grouped->map(function($group) {
+            $exam = $group->first()->exam;
+            $maxScore = $group->max('score');
+            $attemptsCount = $group->count();
+            $bestAttempt = $group->where('score', $maxScore)->sortByDesc('finished_at')->first();
+            $duration = optional($bestAttempt)->duration_in_minutes;
+            return [
+                'exam_title' => $exam?->title ?? '---',
+                'max_score' => $maxScore,
+                'duration_minutes' => $duration,
+                'attempts_count' => $attemptsCount,
+            ];
+        })->values()->toArray();
+
+        $fileName = sprintf('bao_cao_nguoi_dung_%s_%s.xlsx', str_replace(' ', '_', strtolower($user->name)), now()->format('Ymd'));
+        return Excel::download(new UserExamSummaryExport($rows, $user->name, $periodLabel), $fileName);
     }
 }

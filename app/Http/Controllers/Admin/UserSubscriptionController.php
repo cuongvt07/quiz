@@ -8,6 +8,9 @@ use App\Models\UserSubscription;
 use App\Models\SubscriptionPlan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\SubscriptionRevenueExport;
+use App\Exports\UserRevenueExport;
 
 class UserSubscriptionController extends Controller
 {
@@ -118,5 +121,79 @@ class UserSubscriptionController extends Controller
         $subscription->load(['user', 'plan']);
         
         return view('admin.subscriptions.show', compact('subscription'));
+    }
+
+    /**
+     * Xuất báo cáo doanh thu theo tháng
+     */
+    public function export(Request $request)
+    {
+        $month = (int) ($request->get('month') ?? now()->month);
+        $year = (int) ($request->get('year') ?? now()->year);
+
+        // Lấy danh sách gói và số lượt đăng ký trong tháng (bao gồm gói 0)
+        $planCounts = UserSubscription::selectRaw('plan_id, count(*) as count')
+            ->whereMonth('created_at', $month)
+            ->whereYear('created_at', $year)
+            ->groupBy('plan_id')
+            ->pluck('count', 'plan_id')
+            ->toArray();
+
+        $rows = [];
+        $plans = SubscriptionPlan::all();
+        foreach ($plans as $plan) {
+            $price = $plan->price ?? 0;
+            $count = intval($planCounts[$plan->id] ?? 0);
+            $revenue = $price * $count;
+
+            $rows[] = [
+                'plan_id' => $plan->id,
+                'plan_name' => $plan->name,
+                'price' => $price,
+                'count' => $count,
+                'revenue' => $revenue,
+            ];
+        }
+
+        $fileName = sprintf('bao_cao_doanh_thu_%04d_%02d.xlsx', $year, $month);
+        return Excel::download(new SubscriptionRevenueExport($rows, $month, $year), $fileName);
+    }
+
+    /**
+     * Xuất báo cáo doanh thu theo người dùng
+     */
+    public function exportUsers(Request $request)
+    {
+        $month = (int) ($request->get('month') ?? now()->month);
+        $year = (int) ($request->get('year') ?? now()->year);
+
+        $subs = UserSubscription::with(['user', 'plan'])
+            ->whereMonth('created_at', $month)
+            ->whereYear('created_at', $year)
+            ->get();
+
+        $grouped = $subs->groupBy('user_id');
+        $rows = [];
+        foreach ($grouped as $userId => $items) {
+            $user = $items->first()->user;
+            $subscriptionsCount = $items->count();
+            $totalAttempts = $items->reduce(function ($carry, $item) {
+                return $carry + ($item->plan->attempts ?? 0);
+            }, 0);
+            $revenue = $items->reduce(function ($carry, $item) {
+                return $carry + ($item->plan->price ?? 0);
+            }, 0);
+
+            $rows[] = [
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'subscriptions_count' => $subscriptionsCount,
+                'total_attempts' => $totalAttempts,
+                'revenue' => $revenue,
+            ];
+        }
+
+        $fileName = sprintf('bao_cao_doanh_thu_nguoi_dung_%04d_%02d.xlsx', $year, $month);
+        return Excel::download(new UserRevenueExport($rows, $month, $year), $fileName);
     }
 }
