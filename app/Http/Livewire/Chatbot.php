@@ -11,38 +11,83 @@ use App\Models\ExamAttemptAnswer;
 use App\Models\ExamAttempt;
 use App\Models\Question;
 use App\Models\QuestionChoice;
+use App\Models\ChatbotConversation;
+use Illuminate\Support\Str;
 
 class Chatbot extends Component
 {
     public $isOpen = false;
-    public $isMinimized = false;
     public $message = '';
     public $messages = [];
     public $isTyping = false;
+    public $sessionId;
+    public $showHistory = false;
 
     public function mount()
     {
-        // Load chat history from session if exists
-        $this->messages = session('chatbot_messages', []);
+        // Generate or retrieve session ID
+        $this->sessionId = session('chatbot_session_id', Str::uuid()->toString());
+        session(['chatbot_session_id' => $this->sessionId]);
+        
+        // Load chat history from database if user is authenticated
+        if (Auth::check()) {
+            $this->loadChatHistory();
+        } else {
+            // Load chat history from session if exists (for guests)
+            $this->messages = session('chatbot_messages', []);
+        }
+    }
+
+    /**
+     * Load chat history from database for the current session
+     */
+    private function loadChatHistory()
+    {
+        $history = ChatbotConversation::where('user_id', Auth::id())
+            ->where('session_id', $this->sessionId)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $this->messages = [];
+        foreach ($history as $record) {
+            $this->messages[] = [
+                'type' => $record->message_type,
+                'content' => $record->message_content,
+                'timestamp' => $record->created_at->format('H:i')
+            ];
+        }
+        
+        // Also store in session for compatibility
+        session(['chatbot_messages' => $this->messages]);
     }
 
     public function toggleChat()
     {
         $this->isOpen = !$this->isOpen;
-        if ($this->isOpen) {
-            $this->isMinimized = false;
-        }
-    }
-
-    public function minimizeChat()
-    {
-        $this->isMinimized = !$this->isMinimized;
     }
 
     public function closeChat()
     {
         $this->isOpen = false;
-        $this->isMinimized = false;
+        $this->showHistory = false;
+    }
+    
+    public function toggleHistory()
+    {
+        $this->showHistory = !$this->showHistory;
+    }
+    
+    public function startNewChat()
+    {
+        $this->showHistory = false;
+        
+        // Clear messages from view
+        $this->messages = [];
+        session()->forget('chatbot_messages');
+        
+        // Generate new session ID (keep old session in database)
+        $this->sessionId = Str::uuid()->toString();
+        session(['chatbot_session_id' => $this->sessionId]);
     }
 
     public function sendMessage()
@@ -59,6 +104,16 @@ class Chatbot extends Component
         ];
         
         $this->messages[] = $userMessage;
+
+        // Store user message in database
+        if (Auth::check()) {
+            ChatbotConversation::create([
+                'user_id' => Auth::id(),
+                'session_id' => $this->sessionId,
+                'message_type' => 'user',
+                'message_content' => $this->message
+            ]);
+        }
 
         // Clear input
         $userInput = $this->message;
@@ -154,14 +209,27 @@ class Chatbot extends Component
         
         // If no mistakes, return constant congratulation message
         if (empty($mistakes)) {
+            $congratsMessage = '🎉 Chúc mừng bạn! Bạn chưa có câu trả lời sai nào. Bạn đang làm rất tốt! Hãy tiếp tục duy trì phong độ này và không ngừng học hỏi nhé! 💪📚';
+            
             $aiResponse = [
                 'type' => 'ai',
-                'content' => '🎉 Chúc mừng bạn! Bạn chưa có câu trả lời sai nào. Bạn đang làm rất tốt! Hãy tiếp tục duy trì phong độ này và không ngừng học hỏi nhé! 💪📚',
+                'content' => $congratsMessage,
                 'timestamp' => now()->format('H:i')
             ];
             
             $this->messages[] = $aiResponse;
             session(['chatbot_messages' => $this->messages]);
+            
+            // Store AI response in database
+            if (Auth::check()) {
+                ChatbotConversation::create([
+                    'user_id' => Auth::id(),
+                    'session_id' => $this->sessionId,
+                    'message_type' => 'ai',
+                    'message_content' => $congratsMessage
+                ]);
+            }
+            
             return;
         }
 
@@ -272,12 +340,73 @@ DỮ LIỆU CÁC CÂU SAI:
 
         $this->messages[] = $aiResponse;
         session(['chatbot_messages' => $this->messages]);
+        
+        // Store AI response in database
+        if (Auth::check()) {
+            ChatbotConversation::create([
+                'user_id' => Auth::id(),
+                'session_id' => $this->sessionId,
+                'message_type' => 'ai',
+                'message_content' => $aiContent ?? 'Xin lỗi, tôi không thể tạo phản hồi.'
+            ]);
+        }
     }
 
     public function clearChat()
     {
         $this->messages = [];
         session()->forget('chatbot_messages');
+        
+        // Clear current session from database
+        if (Auth::check()) {
+            ChatbotConversation::where('user_id', Auth::id())
+                ->where('session_id', $this->sessionId)
+                ->delete();
+        }
+        
+        // Generate new session ID
+        $this->sessionId = Str::uuid()->toString();
+        session(['chatbot_session_id' => $this->sessionId]);
+    }
+    
+    /**
+     * Load previous chat sessions for history view
+     */
+    public function getChatSessions()
+    {
+        if (!Auth::check()) {
+            return collect([]);
+        }
+        
+        $sessions = ChatbotConversation::where('user_id', Auth::id())
+            ->select('session_id', DB::raw('MIN(created_at) as started_at'), DB::raw('MAX(created_at) as last_message_at'))
+            ->groupBy('session_id')
+            ->orderBy('last_message_at', 'desc')
+            ->limit(10)
+            ->get();
+        
+        // Convert date strings to Carbon instances
+        return $sessions->map(function($session) {
+            $session->started_at = \Carbon\Carbon::parse($session->started_at);
+            $session->last_message_at = \Carbon\Carbon::parse($session->last_message_at);
+            return $session;
+        });
+    }
+    
+    /**
+     * Load a specific chat session
+     */
+    public function loadSession($sessionId)
+    {
+        if (!Auth::check()) {
+            return;
+        }
+        
+        $this->sessionId = $sessionId;
+        session(['chatbot_session_id' => $sessionId]);
+        
+        $this->loadChatHistory();
+        $this->showHistory = false; // Hide history view after loading
     }
 
     /**
