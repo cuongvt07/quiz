@@ -20,48 +20,40 @@
     @if($isOpen)
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 transition-opacity duration-300">
         <div 
-            class="bg-white rounded-lg shadow-2xl w-full max-w-2xl flex flex-col transition-all duration-300 transform"
-            :class="{ 'h-96': @js($isMinimized), 'h-[600px]': !@js($isMinimized) }"
+            class="bg-white rounded-lg shadow-2xl w-full max-w-2xl h-[600px] flex flex-col transition-all duration-300 transform"
             style="max-height: 90vh;"
         >
             <!-- Chat Header -->
             <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-4 rounded-t-lg flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
+                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center overflow-hidden">
+                        <img src="{{ asset('download.jpeg') }}" alt="HSA Assistant" class="w-full h-full object-cover">
                     </div>
                     <div>
-                        <h3 class="font-semibold text-lg">AI Assistant</h3>
+                        <h3 class="font-semibold text-lg">HSA Assistant</h3>
                         <p class="text-xs text-blue-100">Online</p>
                     </div>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <!-- Minimize Button -->
+                    <!-- Chat History Button -->
                     <button 
-                        wire:click="minimizeChat"
+                        wire:click="toggleHistory"
                         class="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
-                        title="{{ $isMinimized ? 'Maximize' : 'Minimize' }}"
+                        title="Chat History"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            @if($isMinimized)
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-                            @else
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                            @endif
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </button>
                     
-                    <!-- Clear Chat Button -->
+                    <!-- New Chat Button -->
                     <button 
-                        wire:click="clearChat"
+                        wire:click="startNewChat"
                         class="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
-                        title="Clear Chat"
-                        onclick="return confirm('Are you sure you want to clear the chat history?')"
+                        title="New Chat"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
                     </button>
                     
@@ -78,7 +70,57 @@
                 </div>
             </div>
 
-            @if(!$isMinimized)
+            <!-- Chat History View -->
+            @if($showHistory)
+                <div class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-lg font-semibold text-gray-800">Chat History</h4>
+                        <button 
+                            wire:click="startNewChat"
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+                        >
+                            New Chat
+                        </button>
+                    </div>
+                    
+                    @php
+                        $sessions = $this->getChatSessions();
+                    @endphp
+                    
+                    @if($sessions->isEmpty())
+                        <div class="text-center text-gray-500 py-12">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                            <p class="text-lg font-medium">No chat history yet</p>
+                            <p class="text-sm">Start a conversation to see it here</p>
+                        </div>
+                    @else
+                        <div class="space-y-3">
+                            @foreach($sessions as $session)
+                                <div 
+                                    wire:click="loadSession('{{ $session->session_id }}')"
+                                    class="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer border-l-4 {{ $session->session_id === $sessionId ? 'border-blue-600' : 'border-gray-300' }}"
+                                >
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex-1">
+                                            <p class="text-sm font-semibold text-gray-800">
+                                                {{ $session->started_at->format('M d, Y - H:i') }}
+                                            </p>
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                Last message: {{ $session->last_message_at->diffForHumans() }}
+                                            </p>
+                                        </div>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            @else
             <!-- Chat Messages Area -->
             <div class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50" id="chatMessages">
                 @if(empty($messages))
@@ -94,10 +136,8 @@
                         <div class="flex {{ $msg['type'] === 'user' ? 'justify-end' : 'justify-start' }}">
                             <div class="flex items-end space-x-2 max-w-[80%]">
                                 @if($msg['type'] === 'ai')
-                                    <div class="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center flex-shrink-0">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                        </svg>
+                                    <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center flex-shrink-0 overflow-hidden border-2 border-blue-600">
+                                        <img src="{{ asset('download.jpeg') }}" alt="HSA Assistant" class="w-full h-full object-cover">
                                     </div>
                                 @endif
                                 
@@ -126,10 +166,8 @@
                 @if($isTyping)
                     <div class="flex justify-start">
                         <div class="flex items-end space-x-2">
-                            <div class="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
+                            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-blue-600">
+                                <img src="{{ asset('download.jpeg') }}" alt="HSA Assistant" class="w-full h-full object-cover">
                             </div>
                             <div class="bg-white px-4 py-3 rounded-2xl shadow-md">
                                 <div class="flex space-x-2">
@@ -142,9 +180,11 @@
                     </div>
                 @endif
             </div>
+            @endif
 
             <!-- Chat Input Area -->
             <div class="bg-white border-t border-gray-200 p-4 rounded-b-lg">
+                @if(!$showHistory)
                 <form wire:submit.prevent="sendMessage" class="flex items-end space-x-3">
                     <div class="flex-1">
                         <textarea 
@@ -167,8 +207,12 @@
                 <p class="text-xs text-gray-500 mt-2 text-center">
                     Press Enter to send, Shift+Enter for new line
                 </p>
+                @else
+                <div class="text-center text-gray-500 py-3">
+                    <p class="text-sm">Select a session to continue chatting or start a new chat</p>
+                </div>
+                @endif
             </div>
-            @endif
         </div>
     </div>
     @endif
