@@ -164,16 +164,19 @@
 
                 <!-- Typing Indicator -->
                 @if($isTyping)
-                    <div class="flex justify-start">
+                    <div class="flex justify-start" id="typingIndicator">
                         <div class="flex items-end space-x-2">
                             <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-blue-600">
                                 <img src="{{ asset('download.jpeg') }}" alt="HSA Assistant" class="w-full h-full object-cover">
                             </div>
                             <div class="bg-white px-4 py-3 rounded-2xl shadow-md">
-                                <div class="flex space-x-2">
-                                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-sm text-gray-600 italic">HSA Assistant đang suy nghĩ </span>
+                                    <div class="flex space-x-1">
+                                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -185,23 +188,30 @@
             <!-- Chat Input Area -->
             <div class="bg-white border-t border-gray-200 p-4 rounded-b-lg">
                 @if(!$showHistory)
-                <form wire:submit.prevent="sendMessage" class="flex items-end space-x-3">
+                <form wire:submit.prevent="sendMessage" class="flex items-end space-x-3" id="chatForm">
                     <div class="flex-1">
-                        <textarea 
+                        <textarea
                             wire:model.defer="message"
                             rows="1"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                            id="messageInput"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
                             placeholder="Type your message..."
-                            @keydown.enter.prevent="if(!event.shiftKey) { $wire.sendMessage(); }"
+                            onkeydown="handleKeyDown(event)"
+                            @if($isTyping) disabled @endif
                         ></textarea>
                     </div>
-                    <button 
+                    <button
                         type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        id="sendButton"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:bg-gray-400"
+                        onclick="handleButtonClick(event)"
+                        @if($isTyping) disabled @endif
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                        </svg>
+                        <span id="sendIcon">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            </svg>
+                        </span>
                     </button>
                 </form>
                 <p class="text-xs text-gray-500 mt-2 text-center">
@@ -219,6 +229,172 @@
     @endauth
 
     <script>
+        let isProcessing = false; // Track if we're currently processing a message
+
+        // Handle Enter key press
+        function handleKeyDown(event) {
+            // If Enter is pressed WITHOUT Shift key
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Prevent new line
+
+                const messageInput = document.getElementById('messageInput');
+                const message = messageInput.value.trim();
+
+                // Only submit if message is not empty and not already processing
+                if (message && !isProcessing && !messageInput.disabled) {
+                    // Mark as processing
+                    isProcessing = true;
+
+                    // Trigger immediate UI changes
+                    disableInputs();
+
+                    // Update Livewire's message value manually and submit
+                    @this.set('message', messageInput.value);
+                    @this.call('sendMessage');
+                }
+            }
+            // If Shift+Enter, allow new line (default behavior)
+        }
+
+        // Handle button click
+        function handleButtonClick(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+
+            // Only submit if message is not empty and not already processing
+            if (message && !isProcessing && !messageInput.disabled) {
+                // Mark as processing
+                isProcessing = true;
+
+                // Trigger immediate UI changes
+                disableInputs();
+
+                // Update Livewire's message value manually and submit
+                @this.set('message', messageInput.value);
+                @this.call('sendMessage');
+            }
+        }
+
+        // Disable inputs immediately for visual feedback
+        function disableInputs() {
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            const sendIcon = document.getElementById('sendIcon');
+            const chatMessages = document.getElementById('chatMessages');
+
+            if (messageInput) {
+                messageInput.disabled = true;
+                messageInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+            }
+
+            if (sendButton) {
+                sendButton.disabled = true;
+                sendButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                sendButton.classList.add('bg-gray-400');
+            }
+
+            // Change icon to spinner
+            if (sendIcon) {
+                sendIcon.innerHTML = `
+                    <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                `;
+            }
+
+            // Show "thinking" message immediately
+            showThinkingMessage();
+        }
+
+        // Show "HSA Assistant đang suy nghĩ..." message
+        function showThinkingMessage() {
+            const chatMessages = document.getElementById('chatMessages');
+
+            if (chatMessages) {
+                // Remove any existing thinking indicator first
+                const existingIndicator = document.getElementById('tempThinkingIndicator');
+                if (existingIndicator) {
+                    existingIndicator.remove();
+                }
+
+                // Create thinking message element
+                const thinkingDiv = document.createElement('div');
+                thinkingDiv.id = 'tempThinkingIndicator';
+                thinkingDiv.className = 'flex justify-start';
+                thinkingDiv.innerHTML = `
+                    <div class="flex items-end space-x-2">
+                        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-blue-600">
+                            <img src="{{ asset('download.jpeg') }}" alt="HSA Assistant" class="w-full h-full object-cover">
+                        </div>
+                        <div class="bg-white px-4 py-3 rounded-2xl shadow-md">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-sm text-gray-600 italic">HSA Assistant đang suy nghĩ...</span>
+                                <div class="flex space-x-1">
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Append to chat messages
+                chatMessages.appendChild(thinkingDiv);
+
+                // Scroll to bottom to show thinking message
+                setTimeout(() => {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 50);
+            }
+        }
+
+        // Remove temporary thinking message
+        function removeThinkingMessage() {
+            const tempIndicator = document.getElementById('tempThinkingIndicator');
+            if (tempIndicator) {
+                tempIndicator.remove();
+            }
+        }
+
+        // Enable inputs when chatbot finishes
+        function enableInputs() {
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            const sendIcon = document.getElementById('sendIcon');
+
+            // Reset processing flag
+            isProcessing = false;
+
+            // Remove temporary thinking message
+            removeThinkingMessage();
+
+            if (messageInput) {
+                messageInput.disabled = false;
+                messageInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                messageInput.value = ''; // Clear the input
+                messageInput.focus(); // Refocus for convenience
+            }
+
+            if (sendButton) {
+                sendButton.disabled = false;
+                sendButton.classList.remove('bg-gray-400');
+                sendButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            }
+
+            // Change icon back to send arrow
+            if (sendIcon) {
+                sendIcon.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                `;
+            }
+        }
+
         // Auto-scroll to bottom when new messages arrive
         window.addEventListener('message-sent', event => {
             setTimeout(() => {
@@ -235,6 +411,50 @@
             if (chatMessages) {
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
+        });
+
+        // Handle chatbot thinking state
+        window.addEventListener('chatbot-thinking', event => {
+            disableInputs();
+            showThinkingMessage();
+
+            // Scroll to bottom to show typing indicator
+            setTimeout(() => {
+                const chatMessages = document.getElementById('chatMessages');
+                if (chatMessages) {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            }, 100);
+        });
+
+        // Handle chatbot finished
+        window.addEventListener('chatbot-finished', event => {
+            removeThinkingMessage();
+            enableInputs();
+
+            // Scroll to bottom to show new message
+            setTimeout(() => {
+                const chatMessages = document.getElementById('chatMessages');
+                if (chatMessages) {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            }, 100);
+        });
+
+        // Livewire hook to handle UI updates
+        document.addEventListener('livewire:load', function () {
+            // Listen for when Livewire finishes processing
+            Livewire.hook('message.processed', (message, component) => {
+                if (component.fingerprint.name === 'chatbot') {
+                    // Auto-scroll after any update
+                    setTimeout(() => {
+                        const chatMessages = document.getElementById('chatMessages');
+                        if (chatMessages) {
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        }
+                    }, 100);
+                }
+            });
         });
     </script>
 </div>
