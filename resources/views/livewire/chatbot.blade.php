@@ -171,7 +171,7 @@
                             </div>
                             <div class="bg-white px-4 py-3 rounded-2xl shadow-md">
                                 <div class="flex items-center space-x-3">
-                                    <span class="text-sm text-gray-600 italic">HSA Assistant is thinking</span>
+                                    <span class="text-sm text-gray-600 italic">HSA Assistant đang suy nghĩ </span>
                                     <div class="flex space-x-1">
                                         <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
                                         <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
@@ -309,7 +309,7 @@
             showThinkingMessage();
         }
 
-        // Show "HSA Assistant is thinking..." message
+        // Show "HSA Assistant đang suy nghĩ..." message
         function showThinkingMessage() {
             const chatMessages = document.getElementById('chatMessages');
 
@@ -331,7 +331,7 @@
                         </div>
                         <div class="bg-white px-4 py-3 rounded-2xl shadow-md">
                             <div class="flex items-center space-x-3">
-                                <span class="text-sm text-gray-600 italic">HSA Assistant is thinking</span>
+                                <span class="text-sm text-gray-600 italic">HSA Assistant đang suy nghĩ...</span>
                                 <div class="flex space-x-1">
                                     <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
                                     <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
