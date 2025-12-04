@@ -164,16 +164,19 @@
 
                 <!-- Typing Indicator -->
                 @if($isTyping)
-                    <div class="flex justify-start">
+                    <div class="flex justify-start" id="typingIndicator">
                         <div class="flex items-end space-x-2">
                             <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-blue-600">
                                 <img src="{{ asset('download.jpeg') }}" alt="HSA Assistant" class="w-full h-full object-cover">
                             </div>
                             <div class="bg-white px-4 py-3 rounded-2xl shadow-md">
-                                <div class="flex space-x-2">
-                                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-sm text-gray-600 italic">HSA Assistant is thinking</span>
+                                    <div class="flex space-x-1">
+                                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -279,6 +282,7 @@
             const messageInput = document.getElementById('messageInput');
             const sendButton = document.getElementById('sendButton');
             const sendIcon = document.getElementById('sendIcon');
+            const chatMessages = document.getElementById('chatMessages');
 
             if (messageInput) {
                 messageInput.disabled = true;
@@ -300,6 +304,60 @@
                     </svg>
                 `;
             }
+
+            // Show "thinking" message immediately
+            showThinkingMessage();
+        }
+
+        // Show "HSA Assistant is thinking..." message
+        function showThinkingMessage() {
+            const chatMessages = document.getElementById('chatMessages');
+
+            if (chatMessages) {
+                // Remove any existing thinking indicator first
+                const existingIndicator = document.getElementById('tempThinkingIndicator');
+                if (existingIndicator) {
+                    existingIndicator.remove();
+                }
+
+                // Create thinking message element
+                const thinkingDiv = document.createElement('div');
+                thinkingDiv.id = 'tempThinkingIndicator';
+                thinkingDiv.className = 'flex justify-start';
+                thinkingDiv.innerHTML = `
+                    <div class="flex items-end space-x-2">
+                        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-blue-600">
+                            <img src="{{ asset('download.jpeg') }}" alt="HSA Assistant" class="w-full h-full object-cover">
+                        </div>
+                        <div class="bg-white px-4 py-3 rounded-2xl shadow-md">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-sm text-gray-600 italic">HSA Assistant is thinking</span>
+                                <div class="flex space-x-1">
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Append to chat messages
+                chatMessages.appendChild(thinkingDiv);
+
+                // Scroll to bottom to show thinking message
+                setTimeout(() => {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 50);
+            }
+        }
+
+        // Remove temporary thinking message
+        function removeThinkingMessage() {
+            const tempIndicator = document.getElementById('tempThinkingIndicator');
+            if (tempIndicator) {
+                tempIndicator.remove();
+            }
         }
 
         // Enable inputs when chatbot finishes
@@ -310,6 +368,9 @@
 
             // Reset processing flag
             isProcessing = false;
+
+            // Remove temporary thinking message
+            removeThinkingMessage();
 
             if (messageInput) {
                 messageInput.disabled = false;
@@ -355,6 +416,7 @@
         // Handle chatbot thinking state
         window.addEventListener('chatbot-thinking', event => {
             disableInputs();
+            showThinkingMessage();
 
             // Scroll to bottom to show typing indicator
             setTimeout(() => {
@@ -367,6 +429,7 @@
 
         // Handle chatbot finished
         window.addEventListener('chatbot-finished', event => {
+            removeThinkingMessage();
             enableInputs();
 
             // Scroll to bottom to show new message
