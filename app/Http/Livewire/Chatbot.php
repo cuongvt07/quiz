@@ -102,7 +102,7 @@ class Chatbot extends Component
             'content' => $this->message,
             'timestamp' => now()->format('H:i')
         ];
-        
+
         $this->messages[] = $userMessage;
 
         // Store user message in database
@@ -119,8 +119,9 @@ class Chatbot extends Component
         $userInput = $this->message;
         $this->message = '';
 
-        // Show typing indicator
+        // Show typing indicator - dispatch event for immediate UI update
         $this->isTyping = true;
+        $this->dispatchBrowserEvent('chatbot-thinking');
 
         // Call AI Agent
         $this->callAIAgent($userInput);
@@ -141,16 +142,17 @@ class Chatbot extends Component
 
         } catch (\Exception $e) {
             Log::error('Chatbot AI Error: ' . $e->getMessage());
-            
+
             $errorResponse = [
                 'type' => 'ai',
                 'content' => 'Xin lỗi, tôi gặp lỗi khi kết nối với dịch vụ AI. Vui lòng thử lại sau.',
                 'timestamp' => now()->format('H:i')
             ];
-            
+
             $this->messages[] = $errorResponse;
         } finally {
             $this->isTyping = false;
+            $this->dispatchBrowserEvent('chatbot-finished');
         }
     }
 
